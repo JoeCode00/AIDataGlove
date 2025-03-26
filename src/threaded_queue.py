@@ -1,8 +1,7 @@
-from time import time_ns, sleep
+from time import sleep
 from queue import Queue, Empty
 from threading import Thread
-import struct
-from handle_serial import TeensySerial
+from src.handle_serial import TeensySerial
 
 
 class ComThread(Thread):
@@ -43,23 +42,3 @@ class ComThread(Thread):
             return data
         except Empty:
             pass
-
-
-
-def main():
-    com = ComThread()
-    com.start()
-    while True:
-        struct_pattern = '8d'
-        data = com.reader()
-        if data is not None:
-            struct_size = struct.calcsize(struct_pattern)
-            if len(data) != struct_size:
-                continue
-            data_tuple = struct.unpack(struct_pattern, data) # pylint: disable=unpacking-non-sequence
-            print(f'Recieved {data_tuple}')
-            com.writer(data)
-            
-
-if __name__ == '__main__':
-    main()
