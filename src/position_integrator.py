@@ -27,10 +27,17 @@ class dynamics():
     def __init__(self, *args, **kwargs):
         self.data_length = 10  # doubles in each array
         self.time = integrated_array(self.data_length, 1)
-
         self.accel = integrated_array(self.data_length, 3)
         self.vel = integrated_array(self.data_length, 3)
         self.pos = integrated_array(self.data_length, 3)
+
+        self.accel_bias_x = 0
+        self.accel_bias_y = 0
+        self.accel_bias_z = 0
+
+        self.vel_bias_x = 0
+        self.vel_bias_y = 0
+        self.vel_bias_z = 0
 
         self.pos_bias_x = 0
         self.pos_bias_y = 0
@@ -43,11 +50,13 @@ class dynamics():
         self.pos = np.roll(self.pos, -1, axis=0)
 
         self.time[self.data_length-1] = time
-        self.accel[self.data_length-1, :] = np.array([accelerometer_x, accelerometer_y, accelerometer_z])
+        self.accel[self.data_length-1, :] = np.array([accelerometer_x - self.accel_bias_x,
+                                                      accelerometer_y - self.accel_bias_y,
+                                                      accelerometer_z - self.accel_bias_z])
         
-        new_vel_x = integrate(self.accel[:, 0], self.time)
-        new_vel_y = integrate(self.accel[:, 1], self.time)
-        new_vel_z = integrate(self.accel[:, 2], self.time)
+        new_vel_x = integrate(self.accel[:, 0], self.time) - self.vel_bias_x
+        new_vel_y = integrate(self.accel[:, 1], self.time) - self.vel_bias_y
+        new_vel_z = integrate(self.accel[:, 2], self.time) - self.vel_bias_z
 
         self.vel[self.data_length-1, :] = np.array([new_vel_x, new_vel_y, new_vel_z])
         
@@ -59,4 +68,11 @@ class dynamics():
         print(np.round(self.pos[self.data_length-1, :]*300, 0))
 
     def bias(self):
+        self.accel_bias_x, self.accel_bias_y, self.accel_bias_z = self.accel[self.data_length-1, :].tolist()
+        self.vel_bias_x, self.vel_bias_y, self.vel_bias_z = self.vel[self.data_length-1, :].tolist()
         self.pos_bias_x, self.pos_bias_y, self.pos_bias_z = self.pos[self.data_length-1, :].tolist()
+
+        self.time = integrated_array(self.data_length, 1)
+        self.accel = integrated_array(self.data_length, 3)
+        self.vel = integrated_array(self.data_length, 3)
+        self.pos = integrated_array(self.data_length, 3)
