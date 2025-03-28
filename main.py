@@ -30,7 +30,7 @@ def communicate(com:ComThread, data_write:bytes|tuple, struct_pattern:str, disab
 def main():
     com = ComThread()
     time = Timer()
-    pos = Dynamics()
+    # pos = Dynamics()
     com.start()
     data_write = (0,0,0,0,0,0,0,0)
 
@@ -42,8 +42,9 @@ def main():
     while data_read is None:
         data_read= communicate(com, data_write, struct_pattern='8d')
     accelerometer_x, accelerometer_y, accelerometer_z, *_ = data_read
-    pos.bias(np.array([[accelerometer_x], [accelerometer_y], [accelerometer_z]]))
+    # pos.bias(np.array([[accelerometer_x], [accelerometer_y], [accelerometer_z]]))
 
+    time.start(5)
     while True:
         data_read= communicate(com, data_write, struct_pattern='8d')
         if data_read is not None:
@@ -51,9 +52,10 @@ def main():
             data_write = data_read
             accelerometer_x, accelerometer_y, accelerometer_z, *_ = data_read
             time_step = time.now() - old_timestamp
-            pos.get(time_step, accelerometer_x, accelerometer_y, accelerometer_z)
+            # pos.get(time_step, accelerometer_x, accelerometer_y, accelerometer_z)
             old_timestamp = time.now()
-            print(f'{pos.position[0, 0]:.2f} {pos.position[1, 0]:.2f} {pos.position[2, 0]:.2f}')
+            # print(f'{pos.position[0, 0]:.2f} {pos.position[1, 0]:.2f} {pos.position[2, 0]:.2f}')
 
+        print(f'{time.now()}, {time.complete()}')
 if __name__ == '__main__':
     main()
