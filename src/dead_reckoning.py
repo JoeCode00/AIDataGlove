@@ -17,6 +17,9 @@ class Dynamics:
 
         self.max_samples_stored = 100
 
+        self.bias_thresh = 20
+        self.bias_counter = 0
+
         arrays = [
             ["Position"] * 3 + ["Velocity"] * 3 + ["Acceleration"] * 3,
             ["X", "Y", "Z"] * 3,
@@ -45,8 +48,13 @@ class Dynamics:
         if abs(self.acceleration[2]) < deadband:
             self.acceleration[2] = 0
 
+        (self.acceleration * 5) ** 0.5
+
         if np.max(np.abs(self.acceleration)) < deadband:
-            self.bias()
+            self.bias_counter = self.bias_counter + 1
+            if self.bias_counter > self.bias_thresh:
+                self.bias()
+                self.bias_counter = 0
 
         if bias:
             self.bias()
@@ -65,14 +73,16 @@ class Dynamics:
                 self.history.loc[:, "Acceleration"].loc[:, axis].values,
                 self.history.index.values,
             )
+        self.velocity = self.velocity - self.bias_velocity
 
         self.history.loc[current_time, "Velocity"] = self.velocity
 
         for index, axis in enumerate(axes):
             self.position[index] = integrate.simpson(
-                self.history.loc[:, "Position"].loc[:, axis].values,
+                self.history.loc[:, "Velocity"].loc[:, axis].values,
                 self.history.index.values,
             )
+        self.position = self.position - self.bias_position
 
         self.history.loc[current_time, "Position"] = self.position
 

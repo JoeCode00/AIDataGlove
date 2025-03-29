@@ -150,9 +150,6 @@ def plothelper(
                 tag=yaxis + " VS " + xaxis + " Line",
                 parent=yaxis + " VS " + xaxis + " Y",
             )
-            print(
-                yaxis + " VS " + xaxis + " Line",
-            )
             dpg.bind_item_theme(yaxis + " VS " + xaxis + " Line", color + " Plot Line")
             dpg.add_scatter_series(
                 [],
@@ -244,7 +241,7 @@ def setup_gui():
         with dpg.group(horizontal=True, user_data=(0, 0, 1, 1)):
             with dpg.group(user_data=(0, 0, 1, 1)):
                 plothelper(
-                    "Position History", "Time", "s", -5, 0, "Position", "", -100, 100
+                    "Position History", "Time", "s", -5, 0, "Position", "", -0.15, 0.15
                 )
         with dpg.group(horizontal=True, user_data=(0, 1, 1, 2)):
             with dpg.group(user_data=(0, 0, 1, 1)):
@@ -252,12 +249,12 @@ def setup_gui():
                     "Position XY",
                     "Position X",
                     "Nm",
-                    -100,
-                    100,
+                    -0.15,
+                    0.15,
                     "Position Y",
                     "Nm",
-                    -100,
-                    100,
+                    -0.15,
+                    0.15,
                 )
 
 

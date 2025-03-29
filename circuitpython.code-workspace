@@ -17,6 +17,7 @@
 			"c:\\Users\\Joe\\.vscode\\extensions\\wmerkens.vscode-circuitpython-v2-0.3.3\\boards\\0x239A\\0x80AE",
 			"c:\\Users\\Joe\\.vscode\\extensions\\wmerkens.vscode-circuitpython-v2-0.3.3\\stubs",
 			"c:\\Users\\Joe\\AppData\\Roaming\\Code\\User\\globalStorage\\wmerkens.vscode-circuitpython-v2\\bundle\\20250319\\adafruit-circuitpython-bundle-py-20250319\\lib"
-		]
+		],
+		"flake8.importStrategy": "useBundled"
 	}
 }
