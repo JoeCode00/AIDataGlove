@@ -1,17 +1,26 @@
 import struct
 import numpy as np
+import dearpygui.dearpygui as dpg
 from src.threaded_queue import ComThread
-from src.handle_time import Timer
-from src.dead_reckoning import Dynamics
+# from src.handle_time import Timer
+# from src.dead_reckoning import Dynamics
+from src.gui import setup_gui, redraw_grid
 
 
 np.set_printoptions(suppress=True)
 
-def communicate(com:ComThread, data_write:bytes|tuple, struct_pattern:str, disable_read:bool=False):
+
+def communicate(
+    com: ComThread,
+    data_write: bytes | tuple,
+    struct_pattern: str,
+    disable_read: bool = False,
+):
     if data_write is not None:
         if isinstance(data_write, tuple):
             if struct_pattern is None:
-                raise TypeError('Must pass in a struct pattern with tuple to be packed')
+                raise TypeError(
+                    "Must pass in a struct pattern with tuple to be packed")
             data_write = struct.pack(struct_pattern, *data_write)
         com.writer(data_write)
 
@@ -28,34 +37,51 @@ def communicate(com:ComThread, data_write:bytes|tuple, struct_pattern:str, disab
 
 
 def main():
+    dpg.create_context()
+    setup_gui()
+    dpg.setup_dearpygui()
+    dpg.show_viewport()
+    dpg.render_dearpygui_frame()
+    dpg.show_metrics()
+
+    old_viewport_width = None
+    old_viewport_height = None
+
     com = ComThread()
-    time = Timer()
+    # time = Timer()
     # pos = Dynamics()
     com.start()
-    data_write = (0,0,0,0,0,0,0,0)
+    data_write = (0, 0, 0, 0, 0, 0, 0, 0)
 
-    bias_timer = Timer()
-    bias_set = False
-    old_timestamp = time.now()
+    # bias_timer = Timer()
+    # bias_set = False
+    # old_timestamp = time.now()
 
-    data_read = None
-    while data_read is None:
-        data_read= communicate(com, data_write, struct_pattern='8d')
-    accelerometer_x, accelerometer_y, accelerometer_z, *_ = data_read
-    # pos.bias(np.array([[accelerometer_x], [accelerometer_y], [accelerometer_z]]))
+    while dpg.is_dearpygui_running():
+        dpg.render_dearpygui_frame()
+        new_viewport_width = dpg.get_viewport_width()
+        new_viewport_height = dpg.get_viewport_height()
 
-    time.start(5)
-    while True:
-        data_read= communicate(com, data_write, struct_pattern='8d')
+        if (
+            new_viewport_width != old_viewport_width
+            or new_viewport_height != old_viewport_height
+        ):
+            recursion_levels = 6
+            redraw_grid(recursion_levels)
+        old_viewport_width = new_viewport_width
+        old_viewport_height = new_viewport_height
+
+        data_read = communicate(com, data_write, struct_pattern="8d")
         if data_read is not None:
-            # print(f'Recieved {data_read} {time.now()}')
             data_write = data_read
             accelerometer_x, accelerometer_y, accelerometer_z, *_ = data_read
-            time_step = time.now() - old_timestamp
+            # time_step = time.now() - old_timestamp
             # pos.get(time_step, accelerometer_x, accelerometer_y, accelerometer_z)
-            old_timestamp = time.now()
-            # print(f'{pos.position[0, 0]:.2f} {pos.position[1, 0]:.2f} {pos.position[2, 0]:.2f}')
+            # old_timestamp = time.now()
+            dpg.set_value('Force VS Time X Line', [[], []])
 
-        print(f'{time.now()}, {time.complete()}')
-if __name__ == '__main__':
+    dpg.destroy_context()
+
+
+if __name__ == "__main__":
     main()
