@@ -60,7 +60,7 @@ def main():
     while data_read_for_bias is None:
         data_read_for_bias = communicate(com, data_write, struct_pattern="8d")
     accelerometer_x, accelerometer_y, accelerometer_z, *_ = data_read_for_bias
-    accel_array = np.array([[accelerometer_x], [accelerometer_y], [accelerometer_z]])
+    accel_array = np.array([accelerometer_x, accelerometer_y, accelerometer_z])
     pos.set(accel_array, bias=True)
 
     while dpg.is_dearpygui_running():
@@ -83,7 +83,7 @@ def main():
             accelerometer_x, accelerometer_y, accelerometer_z, *_ = data_read
 
             accel_array = np.array(
-                [[accelerometer_x], [accelerometer_y], [accelerometer_z]]
+                [accelerometer_x, accelerometer_y, accelerometer_z]
             )
             time_step = time.now() - old_timestamp
             pos.get(time.now(), time_step, accel_array=accel_array)

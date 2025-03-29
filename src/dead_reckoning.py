@@ -1,18 +1,19 @@
 import numpy as np
 import pandas as pd
 from src.handle_time import Timer
+from scipy import integrate
 
 
 class Dynamics:
     def __init__(self):
-        self.position = np.zeros((3, 1))
-        self.velocity = np.zeros((3, 1))
-        self.acceleration = np.zeros((3, 1))
+        self.position = np.zeros((3))
+        self.velocity = np.zeros((3))
+        self.acceleration = np.zeros((3))
         self.time_step = None
 
-        self.bias_acceleration = np.zeros((3, 1))
-        self.bias_velocity = np.zeros((3, 1))
-        self.bias_position = np.zeros((3, 1))
+        self.bias_acceleration = np.zeros((3))
+        self.bias_velocity = np.zeros((3))
+        self.bias_position = np.zeros((3))
 
         self.max_samples_stored = 100
 
@@ -36,16 +37,16 @@ class Dynamics:
     def set(self, accel_array, bias: bool = False):
         self.acceleration = accel_array - self.bias_acceleration
 
-        deadband = 0.2
-        if abs(self.acceleration[0]) < deadband:
-            self.acceleration[0] = 0
-        if abs(self.acceleration[1]) < deadband:
-            self.acceleration[1] = 0
-        if abs(self.acceleration[2]) < deadband:
-            self.acceleration[2] = 0
+        # deadband = 0.2
+        # if abs(self.acceleration[0]) < deadband:
+        #     self.acceleration[0] = 0
+        # if abs(self.acceleration[1]) < deadband:
+        #     self.acceleration[1] = 0
+        # if abs(self.acceleration[2]) < deadband:
+        #     self.acceleration[2] = 0
 
-        if np.max(np.abs(self.acceleration)) < deadband:
-            self.bias()
+        # if np.max(np.abs(self.acceleration)) < deadband:
+        #     self.bias()
 
         if bias:
             self.bias()
@@ -56,22 +57,24 @@ class Dynamics:
 
         self.time_step = time_step
 
-        self.velocity = (
-            self.velocity + self.acceleration * self.time_step - self.bias_velocity
-        )
-        self.position = (
-            self.position
-            + self.velocity * self.time_step
-            + 0.5 * self.acceleration**2
-            - self.bias_position
-        )
-        # if pd.shape(self.history)[0] > self.max_samples_stored:
-        #     pass  # TODO add roling
-        self.history.loc[current_time, :] = (
-            self.position.T.tolist()[0]
-            + self.velocity.T.tolist()[0]
-            + self.acceleration.T.tolist()[0]
-        )
+        self.history.loc[current_time, "Acceleration"] = self.acceleration
+
+        axes = ["X", "Y", "Z"]
+        for index, axis in enumerate(axes):
+            self.velocity[index] = integrate.simpson(
+                self.history.loc[:, "Acceleration"].loc[:, axis].values,
+                self.history.index.values,
+            )
+
+        self.history.loc[current_time, "Velocity"] = self.velocity
+
+        for index, axis in enumerate(axes):
+            self.position[index] = integrate.simpson(
+                self.history.loc[:, "Position"].loc[:, axis].values,
+                self.history.index.values,
+            )
+
+        self.history.loc[current_time, "Position"] = self.position
 
     def process_history(self, order: str, axis: str = None, timer: Timer = None):
         if order == "Time" or axis == "Time":
