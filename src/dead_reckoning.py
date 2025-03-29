@@ -35,6 +35,18 @@ class Dynamics:
 
     def set(self, accel_array, bias: bool = False):
         self.acceleration = accel_array - self.bias_acceleration
+
+        deadband = 0.2
+        if abs(self.acceleration[0]) < deadband:
+            self.acceleration[0] = 0
+        if abs(self.acceleration[1]) < deadband:
+            self.acceleration[1] = 0
+        if abs(self.acceleration[2]) < deadband:
+            self.acceleration[2] = 0
+
+        if np.max(np.abs(self.acceleration)) < deadband:
+            self.bias()
+
         if bias:
             self.bias()
 

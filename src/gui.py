@@ -225,7 +225,7 @@ def setup_gui():
                     -5,
                     0,
                     "Acceleration",
-                    "m/s2",
+                    "",
                     -1,
                     1,
                 )
@@ -234,14 +234,14 @@ def setup_gui():
         with dpg.group(horizontal=True, user_data=(0, 0, 1, 1)):
             with dpg.group(user_data=(0, 0, 1, 1)):
                 plothelper(
-                    "Velocity History", "Time", "s", -5, 0, "Velocity", "m/s", -1, 1
+                    "Velocity History", "Time", "s", -5, 0, "Velocity", "", -10, 10
                 )
 
     with dpg.window(label="Position", no_close=True, user_data=(1, 2, 2, 4)):
         with dpg.group(horizontal=True, user_data=(0, 0, 1, 1)):
             with dpg.group(user_data=(0, 0, 1, 1)):
                 plothelper(
-                    "Position History", "Time", "s", -5, 0, "Position", "m/s", -1, 1
+                    "Position History", "Time", "s", -5, 0, "Position", "", -100, 100
                 )
 
 

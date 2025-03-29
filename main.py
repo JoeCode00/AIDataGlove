@@ -99,7 +99,6 @@ def main():
                         ],
                     )
 
-            print(time.now())
             # dpg.set_value('Acceleration VS Time X Line', [[0, -time.now()], [0, accelerometer_x]])
             # print(pos.history.loc[:, 'pos'].loc[:, 'x'].tolist()[:-1])
             # if pos.history.shape[0]>500:
