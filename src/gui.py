@@ -87,6 +87,7 @@ def grid_helper(parent_uid=None, viewport=False):
             if childs_child_type == "mvAppItemType::mvPlot":
                 continue
             if dpg.get_item_type(child) == "mvAppItemType::mvGroup":
+                width = 0.98 * width
                 height = 0.90 * height
                 pos_y = pos_y + 0.05 * height
             dpg.configure_item(
@@ -136,7 +137,6 @@ def plothelper(
                     tag=yaxis + " VS " + xaxis + " " + axis + " Line",
                     parent=yaxis + " VS " + xaxis + " Y",
                 )
-                print(yaxis + " VS " + xaxis + " " + axis + " Line")
                 dpg.bind_item_theme(
                     yaxis + " VS " + xaxis + " " + axis + " Line", color + " Plot Line"
                 )
@@ -149,6 +149,9 @@ def plothelper(
                 label="a",
                 tag=yaxis + " VS " + xaxis + " Line",
                 parent=yaxis + " VS " + xaxis + " Y",
+            )
+            print(
+                yaxis + " VS " + xaxis + " Line",
             )
             dpg.bind_item_theme(yaxis + " VS " + xaxis + " Line", color + " Plot Line")
             dpg.add_scatter_series(
@@ -242,6 +245,19 @@ def setup_gui():
             with dpg.group(user_data=(0, 0, 1, 1)):
                 plothelper(
                     "Position History", "Time", "s", -5, 0, "Position", "", -100, 100
+                )
+        with dpg.group(horizontal=True, user_data=(0, 1, 1, 2)):
+            with dpg.group(user_data=(0, 0, 1, 1)):
+                plothelper(
+                    "Position XY",
+                    "Position X",
+                    "Nm",
+                    -100,
+                    100,
+                    "Position Y",
+                    "Nm",
+                    -100,
+                    100,
                 )
 
 
