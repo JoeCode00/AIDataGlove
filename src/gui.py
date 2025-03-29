@@ -97,12 +97,10 @@ def grid_helper(parent_uid=None, viewport=False):
 def plothelper(
     plotlabel,
     xaxis,
-    xaxisletter,
     xaxisunits,
     xaxismin,
     xaxismax,
     yaxis,
-    yaxisletter,
     yaxisunits,
     yaxismin,
     yaxismax,
@@ -111,8 +109,7 @@ def plothelper(
     with dpg.plot(label=plotlabel, fit_button=1):
         # required: create x and y axes
         dpg.set_axis_limits(
-            dpg.add_plot_axis(dpg.mvXAxis, label=xaxis +
-                              " (" + xaxisunits + ")"),
+            dpg.add_plot_axis(dpg.mvXAxis, label=xaxis + " (" + xaxisunits + ")"),
             xaxismin,
             xaxismax,
         )
@@ -153,8 +150,7 @@ def plothelper(
                 tag=yaxis + " VS " + xaxis + " Line",
                 parent=yaxis + " VS " + xaxis + " Y",
             )
-            dpg.bind_item_theme(yaxis + " VS " + xaxis +
-                                " Line", color + " Plot Line")
+            dpg.bind_item_theme(yaxis + " VS " + xaxis + " Line", color + " Plot Line")
             dpg.add_scatter_series(
                 [],
                 [],
@@ -188,8 +184,7 @@ def setup_gui():
         with dpg.theme_component(dpg.mvButton):
             dpg.add_theme_color(dpg.mvThemeCol_Button, [0, 0, 0, 0])
             dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, [0, 0, 0, 0])
-            dpg.add_theme_color(
-                dpg.mvThemeCol_ButtonHovered, [29, 151, 236, 25])
+            dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, [29, 151, 236, 25])
             dpg.add_theme_color(dpg.mvThemeCol_Text, [29, 151, 236])
 
     _create_static_textures()
@@ -197,44 +192,57 @@ def setup_gui():
 
     with dpg.theme(tag="Red Plot Line"):
         with dpg.theme_component(dpg.mvAll):
-            dpg.add_theme_color(dpg.mvPlotCol_Line, (255, 0, 0),
-                                category=dpg.mvThemeCat_Plots)
+            dpg.add_theme_color(
+                dpg.mvPlotCol_Line, (255, 0, 0), category=dpg.mvThemeCat_Plots
+            )
     with dpg.theme(tag="Green Plot Line"):
         with dpg.theme_component(dpg.mvAll):
-            dpg.add_theme_color(dpg.mvPlotCol_Line, (0, 255, 0),
-                                category=dpg.mvThemeCat_Plots)
+            dpg.add_theme_color(
+                dpg.mvPlotCol_Line, (0, 255, 0), category=dpg.mvThemeCat_Plots
+            )
     with dpg.theme(tag="Blue Plot Line"):
         with dpg.theme_component(dpg.mvAll):
-            dpg.add_theme_color(dpg.mvPlotCol_Line, (0, 0, 255),
-                                category=dpg.mvThemeCat_Plots)
+            dpg.add_theme_color(
+                dpg.mvPlotCol_Line, (0, 0, 255), category=dpg.mvThemeCat_Plots
+            )
     with dpg.theme(tag="White Plot Line"):
         with dpg.theme_component(dpg.mvAll):
-            dpg.add_theme_color(dpg.mvPlotCol_Line,
-                                (255, 255, 255), category=dpg.mvThemeCat_Plots)
+            dpg.add_theme_color(
+                dpg.mvPlotCol_Line, (255, 255, 255), category=dpg.mvThemeCat_Plots
+            )
 
     with dpg.window(label="Window 1", no_close=True, user_data=(0, 0, 1, 2)):
         with dpg.collapsing_header(label="Buttons", default_open=True):
             dpg.add_button(label="ESTOP", callback=lambda: stop(), width=200)
-    with dpg.window(
-        label="Window 3", tag="Window 3", no_close=True, user_data=(1, 0, 2, 1)
-    ):
 
+    with dpg.window(label="Acceleration", no_close=True, user_data=(1, 0, 2, 1)):
         with dpg.group(horizontal=True, user_data=(0, 0, 1, 1)):
             with dpg.group(user_data=(0, 0, 1, 1)):
-                # plothelper(
-                #     "Acceleration History", "Time", "t", "s", -
-                #     5, 0, "Acceleration", "a", "m/s2", -6, 6
-                # )
-                plothelper("Force History",
-                           'Time', 't', 's', -5, 0,
-                           'Force', 'F', 'N', -6, 6)
-    with dpg.window(
-        label="Window 4", tag="Window 4", no_close=True, user_data=(1, 1, 2, 2)
-    ):
+                plothelper(
+                    "Acceleration History",
+                    "Time",
+                    "s",
+                    -5,
+                    0,
+                    "Acceleration",
+                    "m/s2",
+                    -1,
+                    1,
+                )
+
+    with dpg.window(label="Velocity", no_close=True, user_data=(1, 1, 2, 2)):
         with dpg.group(horizontal=True, user_data=(0, 0, 1, 1)):
             with dpg.group(user_data=(0, 0, 1, 1)):
-                plothelper("T History", "Time", "t",
-                           "s", -5, 0, "T", "F", "N", -6, 6)
+                plothelper(
+                    "Velocity History", "Time", "s", -5, 0, "Velocity", "m/s", -1, 1
+                )
+
+    with dpg.window(label="Position", no_close=True, user_data=(1, 2, 2, 4)):
+        with dpg.group(horizontal=True, user_data=(0, 0, 1, 1)):
+            with dpg.group(user_data=(0, 0, 1, 1)):
+                plothelper(
+                    "Position History", "Time", "s", -5, 0, "Position", "m/s", -1, 1
+                )
 
 
 def redraw_grid(recursion_levels):

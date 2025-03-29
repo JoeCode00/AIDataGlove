@@ -19,8 +19,7 @@ def communicate(
     if data_write is not None:
         if isinstance(data_write, tuple):
             if struct_pattern is None:
-                raise TypeError(
-                    "Must pass in a struct pattern with tuple to be packed")
+                raise TypeError("Must pass in a struct pattern with tuple to be packed")
             data_write = struct.pack(struct_pattern, *data_write)
         com.writer(data_write)
 
@@ -57,6 +56,13 @@ def main():
     # bias_set = False
     old_timestamp = time.now()
 
+    data_read_for_bias = None
+    while data_read_for_bias is None:
+        data_read_for_bias = communicate(com, data_write, struct_pattern="8d")
+    accelerometer_x, accelerometer_y, accelerometer_z, *_ = data_read_for_bias
+    accel_array = np.array([[accelerometer_x], [accelerometer_y], [accelerometer_z]])
+    pos.set(accel_array, bias=True)
+
     while dpg.is_dearpygui_running():
         dpg.render_dearpygui_frame()
         new_viewport_width = dpg.get_viewport_width()
@@ -75,14 +81,29 @@ def main():
         if data_read is not None:
             data_write = data_read
             accelerometer_x, accelerometer_y, accelerometer_z, *_ = data_read
+
+            accel_array = np.array(
+                [[accelerometer_x], [accelerometer_y], [accelerometer_z]]
+            )
             time_step = time.now() - old_timestamp
-            pos.get(time.now(), time_step, accelerometer_x,
-                    accelerometer_y, accelerometer_z)
+            pos.get(time.now(), time_step, accel_array=accel_array)
             old_timestamp = time.now()
-            dpg.set_value('Force VS Time X Line', [pos.history.loc[:, 'pos'].loc[:, 'x'].tolist(),
-                                                   (pos.history.loc[:, 'pos'].index*-1).tolist()])
-            print(pos.history.loc[:, 'pos'].loc[:, 'x'].tolist()[:-1])
-            # breakpoint()
+
+            for order in ["Acceleration", "Velocity", "Position"]:
+                for axis in ["X", "Y", "Z"]:
+                    dpg.set_value(
+                        f"{order} VS Time {axis} Line",
+                        [
+                            pos.process_history(order="Time", timer=time),
+                            pos.process_history(order=order, axis=axis),
+                        ],
+                    )
+
+            print(time.now())
+            # dpg.set_value('Acceleration VS Time X Line', [[0, -time.now()], [0, accelerometer_x]])
+            # print(pos.history.loc[:, 'pos'].loc[:, 'x'].tolist()[:-1])
+            # if pos.history.shape[0]>500:
+            #     breakpoint()
 
     dpg.destroy_context()
 
