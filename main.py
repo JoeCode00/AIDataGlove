@@ -2,8 +2,8 @@ import struct
 import numpy as np
 import dearpygui.dearpygui as dpg
 from src.threaded_queue import ComThread
-# from src.handle_time import Timer
-# from src.dead_reckoning import Dynamics
+from src.handle_time import Timer
+from src.dead_reckoning import Dynamics
 from src.gui import setup_gui, redraw_grid
 
 
@@ -48,14 +48,14 @@ def main():
     old_viewport_height = None
 
     com = ComThread()
-    # time = Timer()
-    # pos = Dynamics()
+    time = Timer()
+    pos = Dynamics()
     com.start()
     data_write = (0, 0, 0, 0, 0, 0, 0, 0)
 
     # bias_timer = Timer()
     # bias_set = False
-    # old_timestamp = time.now()
+    old_timestamp = time.now()
 
     while dpg.is_dearpygui_running():
         dpg.render_dearpygui_frame()
@@ -75,10 +75,14 @@ def main():
         if data_read is not None:
             data_write = data_read
             accelerometer_x, accelerometer_y, accelerometer_z, *_ = data_read
-            # time_step = time.now() - old_timestamp
-            # pos.get(time_step, accelerometer_x, accelerometer_y, accelerometer_z)
-            # old_timestamp = time.now()
-            dpg.set_value('Force VS Time X Line', [[], []])
+            time_step = time.now() - old_timestamp
+            pos.get(time.now(), time_step, accelerometer_x,
+                    accelerometer_y, accelerometer_z)
+            old_timestamp = time.now()
+            dpg.set_value('Force VS Time X Line', [pos.history.loc[:, 'pos'].loc[:, 'x'].tolist(),
+                                                   (pos.history.loc[:, 'pos'].index*-1).tolist()])
+            print(pos.history.loc[:, 'pos'].loc[:, 'x'].tolist()[:-1])
+            # breakpoint()
 
     dpg.destroy_context()
 
