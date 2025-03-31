@@ -81,11 +81,14 @@ def grid_helper(parent_uid=None, viewport=False):
             spread_y = abs(max_y - min_y)
             width = spread_x * grid_width
             height = spread_y * grid_height
+            try:
+                childs_child = dpg.get_item_children(child)[1][0]
 
-            childs_child = dpg.get_item_children(child)[1][0]
-            childs_child_type = dpg.get_item_type(childs_child)
-            if childs_child_type == "mvAppItemType::mvPlot":
-                continue
+                childs_child_type = dpg.get_item_type(childs_child)
+                if childs_child_type == "mvAppItemType::mvPlot":
+                    continue
+            except IndexError:
+                pass
             if dpg.get_item_type(child) == "mvAppItemType::mvGroup":
                 width = 0.98 * width
                 height = 0.90 * height
@@ -105,6 +108,7 @@ def plothelper(
     yaxisunits,
     yaxismin,
     yaxismax,
+    axis_labels = [["X", "Red"], ["Y", "Green"], ["Z", "Blue"]],
 ):
 
     with dpg.plot(label=plotlabel, fit_button=1):
@@ -128,7 +132,7 @@ def plothelper(
 
         if xaxis == "Time":
             dpg.add_plot_legend()
-            for axis, color in [["X", "Red"], ["Y", "Green"], ["Z", "Blue"]]:
+            for axis, color in axis_labels:
                 # breakpoint()
                 dpg.add_line_series(
                     [],
@@ -215,46 +219,29 @@ def setup_gui():
         with dpg.collapsing_header(label="Buttons", default_open=True):
             dpg.add_button(label="ESTOP", callback=lambda: stop(), width=200)
 
-    with dpg.window(label="Acceleration", no_close=True, user_data=(1, 0, 2, 1)):
+    with dpg.window(label="World Acceleration", no_close=True, user_data=(1, 0, 2, 1)):
         with dpg.group(horizontal=True, user_data=(0, 0, 1, 1)):
             with dpg.group(user_data=(0, 0, 1, 1)):
-                plothelper(
-                    "Acceleration History",
-                    "Time",
-                    "s",
-                    -5,
-                    0,
-                    "Acceleration",
-                    "",
-                    -1,
-                    1,
+                plothelper("World Acceleration History",
+                           "Time","s",-5,0,
+                           "World Acceleration","",-1,1,
                 )
 
-    with dpg.window(label="Velocity", no_close=True, user_data=(1, 1, 2, 2)):
+    with dpg.window(label="Angles", no_close=True, user_data=(1, 1, 2, 2)):
         with dpg.group(horizontal=True, user_data=(0, 0, 1, 1)):
             with dpg.group(user_data=(0, 0, 1, 1)):
                 plothelper(
-                    "Velocity History", "Time", "s", -5, 0, "Velocity", "", -10, 10
+                    "Angle History", 
+                    "Time", "s", -5, 0, 
+                    "Angle", "rad", -3, 3, 
+                    axis_labels = [["α", "Red"], ["β", "Green"], ["γ", "Blue"]]
                 )
-
-    with dpg.window(label="Position", no_close=True, user_data=(1, 2, 2, 4)):
+    with dpg.window(label="Local Acceleration", no_close=True, user_data=(1, 2, 2, 3)):
         with dpg.group(horizontal=True, user_data=(0, 0, 1, 1)):
             with dpg.group(user_data=(0, 0, 1, 1)):
-                plothelper(
-                    "Position History", "Time", "s", -5, 0, "Position", "", -0.15, 0.15
-                )
-        with dpg.group(horizontal=True, user_data=(0, 1, 1, 2)):
-            with dpg.group(user_data=(0, 0, 1, 1)):
-                plothelper(
-                    "Position XY",
-                    "Position X",
-                    "Nm",
-                    -0.15,
-                    0.15,
-                    "Position Y",
-                    "Nm",
-                    -0.15,
-                    0.15,
+                plothelper("Local Acceleration History",
+                           "Time","s",-5,0,
+                           "Local Acceleration","",-1,1,
                 )
 
 

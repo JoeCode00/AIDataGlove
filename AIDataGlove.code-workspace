@@ -8,6 +8,10 @@
 		},
 		{
 			"path": "../FTRobotCalibration/FTRobotCalibration/Refactor"
+		},
+		{
+			"name": "Somatic",
+			"path": "../Somatic"
 		}
 	],
 	"settings": {

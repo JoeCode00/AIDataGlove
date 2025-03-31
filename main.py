@@ -1,9 +1,11 @@
 import struct
 import numpy as np
 import dearpygui.dearpygui as dpg
+
 from src.threaded_queue import ComThread
 from src.handle_time import Timer
-from src.dead_reckoning import Dynamics
+# from src.dead_reckoning import Dynamics
+from src.motion import Position
 from src.gui import setup_gui, redraw_grid
 
 
@@ -34,6 +36,16 @@ def communicate(
 
     return data_read
 
+def handle_pos(data_read):
+    accelerometer_x, accelerometer_y, accelerometer_z, euler_0, euler_1, euler_2, *_ = data_read
+    accel = pos.make_accel(accelerometer_x, accelerometer_y, accelerometer_z)
+    euler = pos.make_euler(euler_0, euler_1, euler_2)
+    pos.set(world_acceleration=accel, euler=euler)
+    pos.get(time.now())
+
+com = ComThread()
+time = Timer()
+pos = Position()
 
 def main():
     dpg.create_context()
@@ -46,22 +58,13 @@ def main():
     old_viewport_width = None
     old_viewport_height = None
 
-    com = ComThread()
-    time = Timer()
-    pos = Dynamics()
+    
     com.start()
     data_write = (0, 0, 0, 0, 0, 0, 0, 0)
 
     # bias_timer = Timer()
     # bias_set = False
     old_timestamp = time.now()
-
-    data_read_for_bias = None
-    while data_read_for_bias is None:
-        data_read_for_bias = communicate(com, data_write, struct_pattern="8d")
-    accelerometer_x, accelerometer_y, accelerometer_z, *_ = data_read_for_bias
-    accel_array = np.array([accelerometer_x, accelerometer_y, accelerometer_z])
-    pos.set(accel_array, bias=True)
 
     while dpg.is_dearpygui_running():
         dpg.render_dearpygui_frame()
@@ -80,39 +83,39 @@ def main():
         data_read = communicate(com, data_write, struct_pattern="8d")
         if data_read is not None:
             data_write = data_read
-            accelerometer_x, accelerometer_y, accelerometer_z, *_ = data_read
-
-            accel_array = np.array(
-                [accelerometer_x, accelerometer_y, accelerometer_z]
-            )
-            time_step = time.now() - old_timestamp
-            pos.get(time.now(), time_step, accel_array=accel_array)
+            handle_pos(data_read)
             old_timestamp = time.now()
-
-            for order in ["Acceleration", "Velocity", "Position"]:
+            for scope in ["World", "Local"]:
                 for axis in ["X", "Y", "Z"]:
-                    dpg.set_value(
-                        f"{order} VS Time {axis} Line",
-                        [
-                            pos.process_history(order="Time", timer=time),
-                            pos.process_history(order=order, axis=axis),
-                        ],
-                    )
-            dpg.set_value(
-                "Position Y VS Position X Line",
-                [
-                    pos.process_history(order="Position", axis="X")[-10:-1],
-                    pos.process_history(order="Position", axis="Y")[-10:-1],
-                ],
-            )
+                    dpg.set_value(f"{scope} Acceleration VS Time {axis} Line", [
+                        (pos.history.index-time.now()).tolist(),
+                        pos.history.loc[:, f"{scope} Acceleration {axis}"].tolist()
+                        ])
+            # for order in ["Acceleration", "Velocity", "Position"]:
+            #     for axis in ["X", "Y", "Z"]:
+            #         dpg.set_value(
+            #             f"{order} VS Time {axis} Line",
+            #             [
+            #                 pos.process_history(order="Time", timer=time),
+            #                 pos.process_history(order=order, axis=axis),
+            #             ],
+            #         )
+            # dpg.set_value(
+            #     "Position Y VS Position X Line",
+            #     [
+            #         pos.process_history(order="Position", axis="X")[-10:-1],
+            #         pos.process_history(order="Position", axis="Y")[-10:-1],
+            #     ],
+            # )
 
-            dpg.set_value(
-                "Position Y VS Position X Marker",
-                [
-                    [pos.process_history(order="Position", axis="X")[-1]],
-                    [pos.process_history(order="Position", axis="Y")[-1]],
-                ],
-            )
+            # dpg.set_value(
+            #     "Position Y VS Position X Marker",
+            #     [
+            #         [pos.process_history(order="Position", axis="X")[-1]],
+            #         [pos.process_history(order="Position", axis="Y")[-1]],
+            #     ],
+            # )
+
             # dpg.set_value('Acceleration VS Time X Line', [[0, -time.now()], [0, accelerometer_x]])
             # print(pos.history.loc[:, 'pos'].loc[:, 'x'].tolist()[:-1])
             # if pos.history.shape[0]>500:
