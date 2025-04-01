@@ -233,8 +233,8 @@ def setup_gui():
                 plothelper(
                     "Angle History", 
                     "Time", "s", -5, 0, 
-                    "Angle", "rad", -3, 3, 
-                    axis_labels = [["α", "Red"], ["β", "Green"], ["γ", "Blue"]]
+                    "Angle", "rad", -360, 360, 
+                    axis_labels = [["0", "Red"], ["1", "Green"], ["2", "Blue"]]
                 )
     with dpg.window(label="Local Acceleration", no_close=True, user_data=(1, 2, 2, 3)):
         with dpg.group(horizontal=True, user_data=(0, 0, 1, 1)):

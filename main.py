@@ -36,12 +36,12 @@ def communicate(
 
     return data_read
 
-def handle_pos(data_read):
+def handle_pos(data_read, timestamp):
     accelerometer_x, accelerometer_y, accelerometer_z, euler_0, euler_1, euler_2, *_ = data_read
     accel = pos.make_accel(accelerometer_x, accelerometer_y, accelerometer_z)
     euler = pos.make_euler(euler_0, euler_1, euler_2)
     pos.set(world_acceleration=accel, euler=euler)
-    pos.get(time.now())
+    pos.get(timestamp)
 
 com = ComThread()
 time = Timer()
@@ -64,7 +64,7 @@ def main():
 
     # bias_timer = Timer()
     # bias_set = False
-    old_timestamp = time.now()
+    timestamp = time.now()
 
     while dpg.is_dearpygui_running():
         dpg.render_dearpygui_frame()
@@ -83,14 +83,28 @@ def main():
         data_read = communicate(com, data_write, struct_pattern="8d")
         if data_read is not None:
             data_write = data_read
-            handle_pos(data_read)
-            old_timestamp = time.now()
+            timestamp = time.now()
+            handle_pos(data_read, timestamp)
+            
             for scope in ["World", "Local"]:
                 for axis in ["X", "Y", "Z"]:
                     dpg.set_value(f"{scope} Acceleration VS Time {axis} Line", [
-                        (pos.history.index-time.now()).tolist(),
+                        (pos.history.index-timestamp).tolist(),
                         pos.history.loc[:, f"{scope} Acceleration {axis}"].tolist()
                         ])
+            dpg.set_value("Angle VS Time 0 Line", [
+                (pos.history.index-timestamp).tolist(),
+                pos.history.loc[:, f"Euler 0"].tolist()
+            ])
+            dpg.set_value("Angle VS Time 1 Line", [
+                (pos.history.index-timestamp).tolist(),
+                pos.history.loc[:, f"Euler 1"].tolist()
+            ])
+            dpg.set_value("Angle VS Time 2 Line", [
+                (pos.history.index-timestamp).tolist(),
+                pos.history.loc[:, f"Euler 2"].tolist()
+            ])
+            print(pos.history.loc[timestamp, ["World Acceleration Y"]].tolist())
             # for order in ["Acceleration", "Velocity", "Position"]:
             #     for axis in ["X", "Y", "Z"]:
             #         dpg.set_value(
