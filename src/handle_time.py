@@ -1,6 +1,7 @@
 from time import time
 
-class Timer():
+
+class Timer:
     def __init__(self):
         self.origin = time()
         self.timer_durration = 0
@@ -22,19 +23,19 @@ class Timer():
         self.update()
         return self.current_time
 
-    def start(self, durration:float|int):
+    def start(self, durration: float | int):
         self.update()
         if durration <= 0:
-            raise ValueError(f'Durration must be positive, not {durration}.')
+            raise ValueError(f"Durration must be positive, not {durration}.")
         self.timer_durration = durration
         self.timer_start_time = self.now()
 
-    def complete(self, new_durration:float|int=None):
+    def complete(self, new_durration: float | int = None):
         self.update()
         if new_durration is not None:
             if self.now() >= self.timer_start_time + new_durration:
                 return True
-        
+
         if self.now() >= self.timer_start_time + self.timer_durration:
             return True
         else:

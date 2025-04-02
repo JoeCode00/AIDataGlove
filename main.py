@@ -4,6 +4,7 @@ import dearpygui.dearpygui as dpg
 
 from src.threaded_queue import ComThread
 from src.handle_time import Timer
+
 # from src.dead_reckoning import Dynamics
 from src.motion import Position
 from src.gui import setup_gui, redraw_grid
@@ -36,16 +37,21 @@ def communicate(
 
     return data_read
 
+
 def handle_pos(data_read, timestamp):
-    accelerometer_x, accelerometer_y, accelerometer_z, euler_0, euler_1, euler_2, *_ = data_read
+    accelerometer_x, accelerometer_y, accelerometer_z, euler_0, euler_1, euler_2, *_ = (
+        data_read
+    )
     accel = pos.make_accel(accelerometer_x, accelerometer_y, accelerometer_z)
     euler = pos.make_euler(euler_0, euler_1, euler_2)
     pos.set(world_acceleration=accel, euler=euler)
     pos.get(timestamp)
 
+
 com = ComThread()
 time = Timer()
 pos = Position()
+
 
 def main():
     dpg.create_context()
@@ -58,7 +64,6 @@ def main():
     old_viewport_width = None
     old_viewport_height = None
 
-    
     com.start()
     data_write = (0, 0, 0, 0, 0, 0, 0, 0)
 
@@ -85,25 +90,37 @@ def main():
             data_write = data_read
             timestamp = time.now()
             handle_pos(data_read, timestamp)
-            
+
             for scope in ["World", "Local"]:
                 for axis in ["X", "Y", "Z"]:
-                    dpg.set_value(f"{scope} Acceleration VS Time {axis} Line", [
-                        (pos.history.index-timestamp).tolist(),
-                        pos.history.loc[:, f"{scope} Acceleration {axis}"].tolist()
-                        ])
-            dpg.set_value("Angle VS Time 0 Line", [
-                (pos.history.index-timestamp).tolist(),
-                pos.history.loc[:, f"Euler 0"].tolist()
-            ])
-            dpg.set_value("Angle VS Time 1 Line", [
-                (pos.history.index-timestamp).tolist(),
-                pos.history.loc[:, f"Euler 1"].tolist()
-            ])
-            dpg.set_value("Angle VS Time 2 Line", [
-                (pos.history.index-timestamp).tolist(),
-                pos.history.loc[:, f"Euler 2"].tolist()
-            ])
+                    dpg.set_value(
+                        f"{scope} Acceleration VS Time {axis} Line",
+                        [
+                            (pos.history.index - timestamp).tolist(),
+                            pos.history.loc[:, f"{scope} Acceleration {axis}"].tolist(),
+                        ],
+                    )
+            dpg.set_value(
+                "Angle VS Time 0 Line",
+                [
+                    (pos.history.index - timestamp).tolist(),
+                    pos.history.loc[:, "Euler 0"].tolist(),
+                ],
+            )
+            dpg.set_value(
+                "Angle VS Time 1 Line",
+                [
+                    (pos.history.index - timestamp).tolist(),
+                    pos.history.loc[:, "Euler 1"].tolist(),
+                ],
+            )
+            dpg.set_value(
+                "Angle VS Time 2 Line",
+                [
+                    (pos.history.index - timestamp).tolist(),
+                    pos.history.loc[:, "Euler 2"].tolist(),
+                ],
+            )
             print(pos.history.loc[timestamp, ["World Acceleration Y"]].tolist())
             # for order in ["Acceleration", "Velocity", "Position"]:
             #     for axis in ["X", "Y", "Z"]:

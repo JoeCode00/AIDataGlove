@@ -7,7 +7,7 @@ from src.handle_serial import TeensySerial
 class ComThread(Thread):
     def __init__(self, *args, **kwargs):
         super().__init__()
-        self.teensy = TeensySerial(port='COM17', baudrate=115200)
+        self.teensy = TeensySerial(port="COM17", baudrate=115200)
         self.write = Queue(maxsize=0)
         self.read = Queue(maxsize=0)
         self.daemon = True
@@ -33,7 +33,6 @@ class ComThread(Thread):
     def writer(self, data):
         sleep(0.001)
         self.write.put(data)
-
 
     def reader(self):
         sleep(0.001)

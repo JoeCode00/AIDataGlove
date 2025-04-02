@@ -3,6 +3,7 @@
 Raises:
     Exception: _description_
 """
+
 import serial
 
 
@@ -13,9 +14,9 @@ class TeensySerialError(ValueError):
         ValueError (_type_): Normal built-in error
     """
 
-class TeensySerial():
-    """Creates a wrapper for serial.Serial communications with the Teensy 4.1
-    """
+
+class TeensySerial:
+    """Creates a wrapper for serial.Serial communications with the Teensy 4.1"""
 
     def __init__(self, port: str, baudrate: int):
         """Initializes serial object with default settings.
@@ -37,7 +38,8 @@ class TeensySerial():
             self.ser.open()
         except Exception as e:
             raise TeensySerialError(
-                f'Serial connection was not opened due to {repr(e)}') from e
+                f"Serial connection was not opened due to {repr(e)}"
+            ) from e
 
     def close(self):
         """Immediately closes the serial connection if it is open.
@@ -47,15 +49,15 @@ class TeensySerial():
             TeensySerialError: Raised if there was an error when closing the connection.
         """
         if not self.ser.is_open:
-            raise TeensySerialError(
-                'Serial port is not opened, so it cannot be closed')
+            raise TeensySerialError("Serial port is not opened, so it cannot be closed")
         try:
             self.ser.close()
         except Exception as e:
             raise TeensySerialError(
-                f'Serial connection was not closed due to {repr(e)}') from e
+                f"Serial connection was not closed due to {repr(e)}"
+            ) from e
 
-    def write(self, data:bytes|str, encode:str="UTF-8"):
+    def write(self, data: bytes | str, encode: str = "UTF-8"):
         """Writes bytes to the serial interface.
 
         Args:
@@ -70,9 +72,9 @@ class TeensySerial():
         try:
             self.ser.write(data)
         except Exception as e:
-            raise TeensySerialError(f'Connection timed out due to {repr(e)}') from e
+            raise TeensySerialError(f"Connection timed out due to {repr(e)}") from e
 
-    def read(self, size:int=None, expected: str = ''):
+    def read(self, size: int = None, expected: str = ""):
         """Reads until an expected character is seen. If there is no expected character or the
             reading times out, all read characters will return, up to the integer size of bytes.
 
@@ -85,36 +87,42 @@ class TeensySerial():
         """
 
         if isinstance(size, int) and not size >= 1:
-            raise TeensySerialError('Size of bytes to read must be > 1.')
+            raise TeensySerialError("Size of bytes to read must be > 1.")
 
         if not self.ser.is_open:
             self.open()
 
-        if expected != '':
+        if expected != "":
             try:
                 bytes_read = self.ser.read_until(expected=expected, size=size)
             except Exception as e:
-                raise TeensySerialError(f'Reading until {expected} failed due to {repr(e)}') from e
+                raise TeensySerialError(
+                    f"Reading until {expected} failed due to {repr(e)}"
+                ) from e
 
         elif size is not None:
-            
+
             try:
                 bytes_read = self.ser.read(size=size)
             except Exception as e:
-                raise TeensySerialError(f'Reading {size} bytes failed due to {repr(e)}') from e
+                raise TeensySerialError(
+                    f"Reading {size} bytes failed due to {repr(e)}"
+                ) from e
 
             if len(bytes_read) != size:
-                raise TeensySerialError(f'Only {len(bytes_read)} of {size} bytes were read.')
-        
+                raise TeensySerialError(
+                    f"Only {len(bytes_read)} of {size} bytes were read."
+                )
+
         else:
-            
+
             try:
-                
-                bytes_read = self.ser.readline()[:-1] # Removes b'\n'
+
+                bytes_read = self.ser.readline()[:-1]  # Removes b'\n'
             except Exception as e:
-                raise TeensySerialError(f'Reading line failed due to {repr(e)}') from e
+                raise TeensySerialError(f"Reading line failed due to {repr(e)}") from e
 
         if bytes_read is None:
-            raise TeensySerialError('No bytes were read')
+            raise TeensySerialError("No bytes were read")
 
         return bytes_read
