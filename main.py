@@ -8,7 +8,7 @@ from src.handle_time import Timer
 # from src.dead_reckoning import Dynamics
 from src.motion import Position
 from src.gui import setup_gui, redraw_grid
-
+from src.plot3d import PLT
 
 np.set_printoptions(suppress=True)
 
@@ -51,6 +51,7 @@ def handle_pos(data_read, timestamp):
 com = ComThread()
 time = Timer()
 pos = Position()
+ploter = PLT()
 
 
 def main():
