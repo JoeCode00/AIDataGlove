@@ -101,57 +101,14 @@ def main():
                             pos.history.loc[:, f"{scope} Acceleration {axis}"].tolist(),
                         ],
                     )
-            dpg.set_value(
-                "Angle VS Time 0 Line",
-                [
-                    (pos.history.index - timestamp).tolist(),
-                    pos.history.loc[:, "Euler 0"].tolist(),
-                ],
-            )
-            dpg.set_value(
-                "Angle VS Time 1 Line",
-                [
-                    (pos.history.index - timestamp).tolist(),
-                    pos.history.loc[:, "Euler 1"].tolist(),
-                ],
-            )
-            dpg.set_value(
-                "Angle VS Time 2 Line",
-                [
-                    (pos.history.index - timestamp).tolist(),
-                    pos.history.loc[:, "Euler 2"].tolist(),
-                ],
-            )
-            print(pos.history.loc[timestamp, ["World Acceleration Y"]].tolist())
-            # for order in ["Acceleration", "Velocity", "Position"]:
-            #     for axis in ["X", "Y", "Z"]:
-            #         dpg.set_value(
-            #             f"{order} VS Time {axis} Line",
-            #             [
-            #                 pos.process_history(order="Time", timer=time),
-            #                 pos.process_history(order=order, axis=axis),
-            #             ],
-            #         )
-            # dpg.set_value(
-            #     "Position Y VS Position X Line",
-            #     [
-            #         pos.process_history(order="Position", axis="X")[-10:-1],
-            #         pos.process_history(order="Position", axis="Y")[-10:-1],
-            #     ],
-            # )
-
-            # dpg.set_value(
-            #     "Position Y VS Position X Marker",
-            #     [
-            #         [pos.process_history(order="Position", axis="X")[-1]],
-            #         [pos.process_history(order="Position", axis="Y")[-1]],
-            #     ],
-            # )
-
-            # dpg.set_value('Acceleration VS Time X Line', [[0, -time.now()], [0, accelerometer_x]])
-            # print(pos.history.loc[:, 'pos'].loc[:, 'x'].tolist()[:-1])
-            # if pos.history.shape[0]>500:
-            #     breakpoint()
+            for angle in range(3):
+                dpg.set_value(
+                    f"Angle VS Time {angle} Line",
+                    [
+                        (pos.history.index - timestamp).tolist(),
+                        pos.history.loc[:, f"Euler {angle}"].tolist(),
+                    ],
+                )
 
     dpg.destroy_context()
 
