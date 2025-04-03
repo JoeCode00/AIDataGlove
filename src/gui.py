@@ -1,101 +1,10 @@
 import dearpygui.dearpygui as dpg
 from src.gui_help import _create_dynamic_textures, _create_static_textures
-import numpy as np
 
 
 def stop():
     dpg.stop_dearpygui()
     dpg.destroy_context()
-
-
-def grid_helper(parent_uid=None, viewport=False):
-
-    parent_width = 0
-    parent_height = 0
-    children_uids = None
-
-    if parent_uid is not None:
-
-        parent_width = dpg.get_item_configuration(parent_uid)["width"]
-        grandparent = parent_uid
-        while parent_width == 0:
-            grandparent = dpg.get_item_parent(grandparent)
-            parent_width = dpg.get_item_configuration(grandparent)["width"]
-
-        parent_height = dpg.get_item_configuration(grandparent)["height"]
-
-        children_uids = dpg.get_item_children(parent_uid)[1]
-
-    elif viewport:
-        parent_width = dpg.get_viewport_width()
-        parent_height = dpg.get_viewport_height()
-        children_uids = dpg.get_windows()
-
-    grid_min_x = 0
-    grid_min_y = 0
-    grid_max_x = 0
-    grid_max_y = 0
-
-    for child in children_uids:
-        try:
-            config = dpg.get_item_configuration(child)
-        except SystemError:
-            continue
-        if isinstance(config["user_data"], tuple):  # Is a configured item
-            arrangement_tuple = config["user_data"]
-            min_y, min_x, max_y, max_x = arrangement_tuple
-            if min_x < grid_min_x:
-                grid_min_x = min_x
-            if min_y < grid_min_y:
-                grid_min_y = min_y
-            if max_x > grid_max_x:
-                grid_max_x = max_x
-            if max_y > grid_max_y:
-                grid_max_y = max_y
-
-    grid_spread_x = abs(grid_max_x - grid_min_x)
-    grid_spread_y = abs(grid_max_y - grid_min_y)
-
-    if grid_spread_x > 0 and grid_spread_y > 0:
-        grid_width = float(np.floor(parent_width / grid_spread_x))
-        grid_height = float(np.floor(parent_height / grid_spread_y))
-    else:
-        return
-
-    # if parent_uid == 42:
-    #     breakpoint()
-    #     print("start")
-
-    for child in children_uids:
-        try:
-            config = dpg.get_item_configuration(child)
-        except SystemError:
-            continue
-        if isinstance(config["user_data"], tuple):  # Is a configured item
-
-            arrangement_tuple = config["user_data"]
-            min_y, min_x, max_y, max_x = arrangement_tuple
-            pos_x = float(np.floor(min_x * grid_width))
-            pos_y = float(np.floor(min_y * grid_height))
-            spread_x = abs(max_x - min_x)
-            spread_y = abs(max_y - min_y)
-            width = spread_x * grid_width
-            height = spread_y * grid_height
-            try:
-                childs_child = dpg.get_item_children(child)[1][0]
-
-                childs_child_type = dpg.get_item_type(childs_child)
-                if childs_child_type == "mvAppItemType::mvPlot":
-                    continue
-            except IndexError:
-                pass
-            if dpg.get_item_type(child) == "mvAppItemType::mvGroup":
-                width = 0.98 * width
-                height = 0.90 * height
-                pos_y = pos_y + 0.05 * height
-            dpg.configure_item(
-                item=child, pos=(pos_x, pos_y), width=width, height=height
-            )
 
 
 def plothelper(
@@ -128,12 +37,8 @@ def plothelper(
             yaxismax,
         )
 
-        # series belong to a y axis
-
-        # if xaxis == "Time":
         dpg.add_plot_legend()
         for axis, color in axis_labels:
-            # breakpoint()
             dpg.add_line_series(
                 [],
                 [],
@@ -144,25 +49,6 @@ def plothelper(
             dpg.bind_item_theme(
                 yaxis + " VS " + xaxis + " " + axis + " Line", color + " Plot Line"
             )
-            print(yaxis + " VS " + xaxis + " " + axis + " Line")
-
-        # else:
-        #     color = "white"
-        #     dpg.add_line_series(
-        #         [],
-        #         [],
-        #         label="a",
-        #         tag=yaxis + " VS " + xaxis + " Line",
-        #         parent=yaxis + " VS " + xaxis + " Y",
-        #     )
-        #     dpg.bind_item_theme(yaxis + " VS " + xaxis + " Line", color + " Plot Line")
-        #     dpg.add_scatter_series(
-        #         [],
-        #         [],
-        #         label="a",
-        #         tag=yaxis + " VS " + xaxis + " Marker",
-        #         parent=yaxis + " VS " + xaxis + " Y",
-        #     )
 
 
 def setup_gui():
@@ -228,44 +114,6 @@ def setup_gui():
             dpg.add_button(label="ESTOP", callback=lambda: stop(), width=200)
 
     with dpg.window(
-        label="Position",
-        tag="Position",
-        no_close=True,
-        width=dpg.get_viewport_width() / 2,
-        height=dpg.get_viewport_height() / 2,
-        pos=[dpg.get_viewport_width() / 2, 0],
-    ):
-        ColumnWidth = dpg.get_item_width("Position") / 2 * 0.95
-        RowHeight = dpg.get_item_height("Position") * 0.95
-        with dpg.group(horizontal=True, height=RowHeight):
-            with dpg.group(width=ColumnWidth):
-                plothelper(
-                    plotlabel="Angle XY",
-                    xaxis="Angle X",
-                    xaxisunits="-",
-                    xaxismin=-2,
-                    xaxismax=2,
-                    yaxis="Angle Y",
-                    yaxisunits="-",
-                    yaxismin=-2,
-                    yaxismax=2,
-                    axis_labels=[["RX", "Red"], ["RY", "Green"], ["RZ", "Blue"]],
-                )
-            with dpg.group(width=ColumnWidth):
-                plothelper(
-                    plotlabel="Angle ZY",
-                    xaxis="Angle Z",
-                    xaxisunits="-",
-                    xaxismin=-2,
-                    xaxismax=2,
-                    yaxis="Angle Y",
-                    yaxisunits="-",
-                    yaxismin=-2,
-                    yaxismax=2,
-                    axis_labels=[["RX", "Red"], ["RY", "Green"], ["RZ", "Blue"]],
-                )
-
-    with dpg.window(
         label="Acceleration",
         tag="Acceleration",
         no_close=True,
@@ -285,8 +133,8 @@ def setup_gui():
                     xaxismax=0,
                     yaxis="World Acceleration",
                     yaxisunits="",
-                    yaxismin=-1,
-                    yaxismax=1,
+                    yaxismin=-5,
+                    yaxismax=5,
                 )
         with dpg.group(horizontal=True, height=RowHeight):
             with dpg.group(width=ColumnWidth):
@@ -298,46 +146,44 @@ def setup_gui():
                     xaxismax=0,
                     yaxis="Local Acceleration",
                     yaxisunits="",
-                    yaxismin=-1,
-                    yaxismax=1,
+                    yaxismin=-5,
+                    yaxismax=5,
                 )
 
     with dpg.window(
-        label="Angles",
-        tag="Angles",
+        label="Orientation",
+        tag="Orientation",
         no_close=True,
         width=dpg.get_viewport_width() / 2,
         height=dpg.get_viewport_height() / 2,
         pos=[dpg.get_viewport_width() / 2, dpg.get_viewport_height() / 2],
     ):
-        ColumnWidth = dpg.get_item_width("Angles") * 0.95
-        RowHeight = dpg.get_item_height("Angles") * 0.95
+        ColumnWidth = dpg.get_item_width("Orientation") / 2 * 0.95
+        RowHeight = dpg.get_item_height("Orientation") * 0.95
         with dpg.group(horizontal=True, height=RowHeight):
             with dpg.group(width=ColumnWidth):
                 plothelper(
-                    plotlabel="Angle History",
-                    xaxis="Time",
-                    xaxisunits="s",
-                    xaxismin=-5,
-                    xaxismax=0,
-                    yaxis="Angle",
-                    yaxisunits="rad",
-                    yaxismin=np.pi,
-                    yaxismax=np.pi,
-                    axis_labels=[["0", "Red"], ["1", "Green"], ["2", "Blue"]],
+                    plotlabel="Angle XY",
+                    xaxis="Angle X",
+                    xaxisunits="-",
+                    xaxismin=-1,
+                    xaxismax=1,
+                    yaxis="Angle Y",
+                    yaxisunits="-",
+                    yaxismin=-1,
+                    yaxismax=1,
+                    axis_labels=[["RX", "Red"], ["RY", "Green"], ["RZ", "Blue"]],
                 )
-
-
-def redraw_grid(recursion_levels):
-    grid_helper(viewport=True)
-    level0 = dpg.get_windows()
-    for i in range(recursion_levels):
-        levels = [level0] + [[]] * recursion_levels
-        for parent in levels[i]:
-            user_data = dpg.get_item_configuration(parent)["user_data"]
-            if isinstance(user_data, tuple):
-                grid_helper(parent_uid=parent)
-            children = dpg.get_item_children(parent)[1]
-            if children != []:
-                for child in children:
-                    levels[i + 1] = levels[i + 1] + [child]
+            with dpg.group(width=ColumnWidth):
+                plothelper(
+                    plotlabel="Angle ZY",
+                    xaxis="Angle Z",
+                    xaxisunits="-",
+                    xaxismin=-1,
+                    xaxismax=1,
+                    yaxis="Angle Y",
+                    yaxisunits="-",
+                    yaxismin=-1,
+                    yaxismax=1,
+                    axis_labels=[["RX", "Red"], ["RY", "Green"], ["RZ", "Blue"]],
+                )

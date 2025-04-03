@@ -38,13 +38,23 @@ def communicate(
 
 
 def handle_pos(data_read, timestamp):
-    accelerometer_x, accelerometer_y, accelerometer_z, euler_0, euler_1, euler_2, *_ = (
-        data_read
-    )
+    (
+        accelerometer_x,
+        accelerometer_y,
+        accelerometer_z,
+        quat_w,
+        quat_x,
+        quat_y,
+        quat_z,
+        *_,
+    ) = data_read
     accel = pos.make_accel(accelerometer_x, accelerometer_y, accelerometer_z)
-    euler = pos.make_euler(euler_0, euler_1, euler_2)
-    pos.set(world_acceleration=accel, euler=euler)
-    pos.get(timestamp)
+    quat = pos.make_quat(quat_w, quat_x, quat_y, quat_z)
+    try:
+        pos.set(world_acceleration=accel, quat=quat)
+        pos.get(timestamp)
+    except ValueError:
+        raise ValueError("Could not handle pos")
 
 
 com = ComThread()
@@ -88,7 +98,10 @@ def main():
         if data_read is not None:
             data_write = data_read
             timestamp = time.now()
-            handle_pos(data_read, timestamp)
+            try:
+                handle_pos(data_read, timestamp)
+            except ValueError:
+                continue
 
             for scope in ["World", "Local"]:
                 for axis in ["X", "Y", "Z"]:
@@ -99,31 +112,12 @@ def main():
                             pos.history.loc[:, f"{scope} Acceleration {axis}"].tolist(),
                         ],
                     )
-            for angle in range(3):
-                dpg.set_value(
-                    f"Angle VS Time {angle} Line",
-                    [
-                        (pos.history.index - timestamp).tolist(),
-                        pos.history.loc[:, f"Euler {angle}"].tolist(),
-                    ],
-                )
-            # print(pos.Rx, pos.Ry, pos.Rz)
-            # breakpoint()
-            for str, R in [["RX", pos.Rx], ["RY", pos.Ry], ["RZ", pos.Rz]]:
-                dpg.set_value(
-                    f"Angle Y VS Angle X {str} Line", [[0, R[0]], [0, R[1]]]
-                )
 
             for str, R in [["RX", pos.Rx], ["RY", pos.Ry], ["RZ", pos.Rz]]:
-                dpg.set_value(
-                    f"Angle Y VS Angle Z {str} Line", [[0, R[2]], [0, R[1]]]
-                )
-            # dpg.set_value(
-            #     "Angle Y VS Angle X RY Line", [[0, pos.Ry[0]], [0, pos.Ry[1]]]
-            # )
-            # dpg.set_value(
-            #     "Angle Y VS Angle X RZ Line", [[0, pos.Rz[0]], [0, pos.Rz[1]]]
-            # )
+                dpg.set_value(f"Angle Y VS Angle X {str} Line", [[0, R[0]], [0, R[1]]])
+
+            for str, R in [["RX", pos.Rx], ["RY", pos.Ry], ["RZ", pos.Rz]]:
+                dpg.set_value(f"Angle Y VS Angle Z {str} Line", [[0, R[2]], [0, R[1]]])
 
     dpg.destroy_context()
 
