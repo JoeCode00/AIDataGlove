@@ -7,7 +7,7 @@ from src.handle_time import Timer
 
 # from src.dead_reckoning import Dynamics
 from src.motion import Position
-from src.gui import setup_gui, redraw_grid
+from src.gui import setup_gui
 
 np.set_printoptions(suppress=True)
 
@@ -60,8 +60,8 @@ def main():
     dpg.render_dearpygui_frame()
     dpg.show_metrics()
 
-    old_viewport_width = None
-    old_viewport_height = None
+    # old_viewport_width = None
+    # old_viewport_height = None
 
     com.start()
     data_write = (0, 0, 0, 0, 0, 0, 0, 0)
@@ -72,17 +72,17 @@ def main():
 
     while dpg.is_dearpygui_running():
         dpg.render_dearpygui_frame()
-        new_viewport_width = dpg.get_viewport_width()
-        new_viewport_height = dpg.get_viewport_height()
+        # new_viewport_width = dpg.get_viewport_width()
+        # new_viewport_height = dpg.get_viewport_height()
 
-        if (
-            new_viewport_width != old_viewport_width
-            or new_viewport_height != old_viewport_height
-        ):
-            recursion_levels = 6
-            redraw_grid(recursion_levels)
-        old_viewport_width = new_viewport_width
-        old_viewport_height = new_viewport_height
+        # if (
+        #     new_viewport_width != old_viewport_width
+        #     or new_viewport_height != old_viewport_height
+        # ):
+        #     recursion_levels = 8
+        #     redraw_grid(recursion_levels)
+        # old_viewport_width = new_viewport_width
+        # old_viewport_height = new_viewport_height
 
         data_read = communicate(com, data_write, struct_pattern="8d")
         if data_read is not None:
@@ -107,6 +107,23 @@ def main():
                         pos.history.loc[:, f"Euler {angle}"].tolist(),
                     ],
                 )
+            # print(pos.Rx, pos.Ry, pos.Rz)
+            # breakpoint()
+            for str, R in [["RX", pos.Rx], ["RY", pos.Ry], ["RZ", pos.Rz]]:
+                dpg.set_value(
+                    f"Angle Y VS Angle X {str} Line", [[0, R[0]], [0, R[1]]]
+                )
+
+            for str, R in [["RX", pos.Rx], ["RY", pos.Ry], ["RZ", pos.Rz]]:
+                dpg.set_value(
+                    f"Angle Y VS Angle Z {str} Line", [[0, R[2]], [0, R[1]]]
+                )
+            # dpg.set_value(
+            #     "Angle Y VS Angle X RY Line", [[0, pos.Ry[0]], [0, pos.Ry[1]]]
+            # )
+            # dpg.set_value(
+            #     "Angle Y VS Angle X RZ Line", [[0, pos.Rz[0]], [0, pos.Rz[1]]]
+            # )
 
     dpg.destroy_context()
 

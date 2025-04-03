@@ -41,7 +41,7 @@ class Position:
             self.euler = euler
 
     def get(self, timestamp: float):
-        self.R = Rotation.from_euler("zyx", self.euler).as_matrix()
+        self.R = Rotation.from_euler("xyz", self.euler).as_matrix()
         self.Rx = self.R[:, 0]
         self.Ry = self.R[:, 1]
         self.Rz = self.R[:, 2]

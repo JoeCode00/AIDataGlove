@@ -130,38 +130,39 @@ def plothelper(
 
         # series belong to a y axis
 
-        if xaxis == "Time":
-            dpg.add_plot_legend()
-            for axis, color in axis_labels:
-                # breakpoint()
-                dpg.add_line_series(
-                    [],
-                    [],
-                    label=axis,
-                    tag=yaxis + " VS " + xaxis + " " + axis + " Line",
-                    parent=yaxis + " VS " + xaxis + " Y",
-                )
-                dpg.bind_item_theme(
-                    yaxis + " VS " + xaxis + " " + axis + " Line", color + " Plot Line"
-                )
-
-        else:
-            color = "white"
+        # if xaxis == "Time":
+        dpg.add_plot_legend()
+        for axis, color in axis_labels:
+            # breakpoint()
             dpg.add_line_series(
                 [],
                 [],
-                label="a",
-                tag=yaxis + " VS " + xaxis + " Line",
+                label=axis,
+                tag=yaxis + " VS " + xaxis + " " + axis + " Line",
                 parent=yaxis + " VS " + xaxis + " Y",
             )
-            dpg.bind_item_theme(yaxis + " VS " + xaxis + " Line", color + " Plot Line")
-            dpg.add_scatter_series(
-                [],
-                [],
-                label="a",
-                tag=yaxis + " VS " + xaxis + " Marker",
-                parent=yaxis + " VS " + xaxis + " Y",
+            dpg.bind_item_theme(
+                yaxis + " VS " + xaxis + " " + axis + " Line", color + " Plot Line"
             )
+            print(yaxis + " VS " + xaxis + " " + axis + " Line")
+
+        # else:
+        #     color = "white"
+        #     dpg.add_line_series(
+        #         [],
+        #         [],
+        #         label="a",
+        #         tag=yaxis + " VS " + xaxis + " Line",
+        #         parent=yaxis + " VS " + xaxis + " Y",
+        #     )
+        #     dpg.bind_item_theme(yaxis + " VS " + xaxis + " Line", color + " Plot Line")
+        #     dpg.add_scatter_series(
+        #         [],
+        #         [],
+        #         label="a",
+        #         tag=yaxis + " VS " + xaxis + " Marker",
+        #         parent=yaxis + " VS " + xaxis + " Y",
+        #     )
 
 
 def setup_gui():
@@ -215,53 +216,115 @@ def setup_gui():
                 dpg.mvPlotCol_Line, (255, 255, 255), category=dpg.mvThemeCat_Plots
             )
 
-    with dpg.window(label="Window 1", no_close=True, user_data=(0, 0, 1, 2)):
+    with dpg.window(
+        label="Window",
+        tag="Window",
+        no_close=True,
+        width=dpg.get_viewport_width() / 2,
+        height=dpg.get_viewport_height() / 2,
+        pos=[0, 0],
+    ):
         with dpg.collapsing_header(label="Buttons", default_open=True):
             dpg.add_button(label="ESTOP", callback=lambda: stop(), width=200)
 
-    with dpg.window(label="World Acceleration", no_close=True, user_data=(1, 0, 2, 1)):
-        with dpg.group(horizontal=True, user_data=(0, 0, 1, 1)):
-            with dpg.group(user_data=(0, 0, 1, 1)):
+    with dpg.window(
+        label="Position",
+        tag="Position",
+        no_close=True,
+        width=dpg.get_viewport_width() / 2,
+        height=dpg.get_viewport_height() / 2,
+        pos=[dpg.get_viewport_width() / 2, 0],
+    ):
+        ColumnWidth = dpg.get_item_width("Position") / 2 * 0.95
+        RowHeight = dpg.get_item_height("Position") * 0.95
+        with dpg.group(horizontal=True, height=RowHeight):
+            with dpg.group(width=ColumnWidth):
                 plothelper(
-                    "World Acceleration History",
-                    "Time",
-                    "s",
-                    -5,
-                    0,
-                    "World Acceleration",
-                    "",
-                    -1,
-                    1,
+                    plotlabel="Angle XY",
+                    xaxis="Angle X",
+                    xaxisunits="-",
+                    xaxismin=-2,
+                    xaxismax=2,
+                    yaxis="Angle Y",
+                    yaxisunits="-",
+                    yaxismin=-2,
+                    yaxismax=2,
+                    axis_labels=[["RX", "Red"], ["RY", "Green"], ["RZ", "Blue"]],
+                )
+            with dpg.group(width=ColumnWidth):
+                plothelper(
+                    plotlabel="Angle ZY",
+                    xaxis="Angle Z",
+                    xaxisunits="-",
+                    xaxismin=-2,
+                    xaxismax=2,
+                    yaxis="Angle Y",
+                    yaxisunits="-",
+                    yaxismin=-2,
+                    yaxismax=2,
+                    axis_labels=[["RX", "Red"], ["RY", "Green"], ["RZ", "Blue"]],
                 )
 
-    with dpg.window(label="Angles", no_close=True, user_data=(1, 1, 2, 2)):
-        with dpg.group(horizontal=True, user_data=(0, 0, 1, 1)):
-            with dpg.group(user_data=(0, 0, 1, 1)):
+    with dpg.window(
+        label="Acceleration",
+        tag="Acceleration",
+        no_close=True,
+        width=dpg.get_viewport_width() / 2,
+        height=dpg.get_viewport_height() / 2,
+        pos=[0, dpg.get_viewport_height() / 2],
+    ):
+        ColumnWidth = dpg.get_item_width("Acceleration") * 0.95
+        RowHeight = dpg.get_item_height("Acceleration") / 2 * 0.95
+        with dpg.group(horizontal=True, height=RowHeight):
+            with dpg.group(width=ColumnWidth):
                 plothelper(
-                    "Angle History",
-                    "Time",
-                    "s",
-                    -5,
-                    0,
-                    "Angle",
-                    "rad",
-                    -360,
-                    360,
-                    axis_labels=[["0", "Red"], ["1", "Green"], ["2", "Blue"]],
+                    plotlabel="World Acceleration History",
+                    xaxis="Time",
+                    xaxisunits="s",
+                    xaxismin=-5,
+                    xaxismax=0,
+                    yaxis="World Acceleration",
+                    yaxisunits="",
+                    yaxismin=-1,
+                    yaxismax=1,
                 )
-    with dpg.window(label="Local Acceleration", no_close=True, user_data=(1, 2, 2, 3)):
-        with dpg.group(horizontal=True, user_data=(0, 0, 1, 1)):
-            with dpg.group(user_data=(0, 0, 1, 1)):
+        with dpg.group(horizontal=True, height=RowHeight):
+            with dpg.group(width=ColumnWidth):
                 plothelper(
-                    "Local Acceleration History",
-                    "Time",
-                    "s",
-                    -5,
-                    0,
-                    "Local Acceleration",
-                    "",
-                    -1,
-                    1,
+                    plotlabel="Local Acceleration History",
+                    xaxis="Time",
+                    xaxisunits="s",
+                    xaxismin=-5,
+                    xaxismax=0,
+                    yaxis="Local Acceleration",
+                    yaxisunits="",
+                    yaxismin=-1,
+                    yaxismax=1,
+                )
+
+    with dpg.window(
+        label="Angles",
+        tag="Angles",
+        no_close=True,
+        width=dpg.get_viewport_width() / 2,
+        height=dpg.get_viewport_height() / 2,
+        pos=[dpg.get_viewport_width() / 2, dpg.get_viewport_height() / 2],
+    ):
+        ColumnWidth = dpg.get_item_width("Angles") * 0.95
+        RowHeight = dpg.get_item_height("Angles") * 0.95
+        with dpg.group(horizontal=True, height=RowHeight):
+            with dpg.group(width=ColumnWidth):
+                plothelper(
+                    plotlabel="Angle History",
+                    xaxis="Time",
+                    xaxisunits="s",
+                    xaxismin=-5,
+                    xaxismax=0,
+                    yaxis="Angle",
+                    yaxisunits="rad",
+                    yaxismin=np.pi,
+                    yaxismax=np.pi,
+                    axis_labels=[["0", "Red"], ["1", "Green"], ["2", "Blue"]],
                 )
 
 
