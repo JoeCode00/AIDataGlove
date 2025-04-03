@@ -9,6 +9,9 @@ class Position:
         self.world_acceleration = aligned_P()
         self.euler = np.zeros(3)
         self.R = aligned_R()
+        self.Rx = np.zeros((3, 1))
+        self.Ry = np.zeros((3, 1))
+        self.Rz = np.zeros((3, 1))
         self.T = aligned_T()
         self.local_acceleration = aligned_P()
 
@@ -39,6 +42,9 @@ class Position:
 
     def get(self, timestamp: float):
         self.R = Rotation.from_euler("zyx", self.euler).as_matrix()
+        self.Rx = self.R[:, 0]
+        self.Ry = self.R[:, 1]
+        self.Rz = self.R[:, 2]
         self.T = T_from_RP(R=self.R, P=self.world_acceleration)
         self.local_acceleration = P_from_TP(T=self.T, P=self.world_acceleration)
         self.history.loc[timestamp, self.accel_euler_columns] = (

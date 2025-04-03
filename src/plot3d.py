@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
-import numpy as np
+
+# import numpy as np
 
 
 class PLT:
@@ -7,22 +8,22 @@ class PLT:
         self.fig = plt.figure()
         self.ax = self.fig.add_subplot(projection="3d")
 
-    def plot(self, x: np.ndarray, y: np.ndarray, z: np.ndarray, format: str = "r-"):
-        self.ax.cla()
-        self.ax.plot(x, y, z, format)
-
-        # Set plot labels and title
         self.ax.set_xlabel("X")
         self.ax.set_ylabel("Y")
         self.ax.set_zlabel("Z")
         self.ax.set_title("Real-time 3D Plot")
 
-        # Keep the plot within some bounds.
-        self.ax.set_xlim(min(x), max(x))
-        self.ax.set_ylim(min(y) - 1, max(y) + 1)
-        self.ax.set_zlim(min(z) - 1, max(z) + 1)
+    def axesplot(self, axes: list, format: list = ["r-"]):
+        self.ax.cla()
+        # for index, axis in enumerate(axes):
+        x, y, z = axes[0].tolist()
+        self.ax.plot(x, y, z, format[0])
 
-        plt.pause(0.00001)
+        self.ax.set_xlim3d(-2, 2)
+        self.ax.set_ylim3d(-2, 2)
+        self.ax.set_zlim3d(-2, 2)
+        self.ax.autoscale(False)
+        plt.pause(0.001)
 
 
 # ploter = PLT()
