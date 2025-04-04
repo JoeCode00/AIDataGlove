@@ -1,3 +1,5 @@
+# TODO gc old history
+
 import struct
 import numpy as np
 import dearpygui.dearpygui as dpg
@@ -260,13 +262,16 @@ def main():
     timestamp = time.now()
 
     plane_sides = [
-                ["Right", plane.world_bottom_right, plane.world_top_right],
-                ["Top", plane.world_top_left, plane.world_top_right],
-                ["Left", plane.world_bottom_left, plane.world_top_left],
-                ["Bottom", plane.world_bottom_left, plane.world_bottom_right]
-            ]
+        ["Right", plane.world_bottom_right, plane.world_top_right],
+        ["Top", plane.world_top_left, plane.world_top_right],
+        ["Left", plane.world_bottom_left, plane.world_top_left],
+        ["Bottom", plane.world_bottom_left, plane.world_bottom_right],
+    ]
     for side, coords_1, coords_2 in plane_sides:
-        dpg.set_value(f"Y VS X Plane {side} Line", [[coords_1[0], coords_2[0]], [coords_1[1], coords_2[1]]])
+        dpg.set_value(
+            f"Y VS X Plane {side} Line",
+            [[coords_1[0], coords_2[0]], [coords_1[1], coords_2[1]]],
+        )
 
     while dpg.is_dearpygui_running():
         dpg.render_dearpygui_frame()
@@ -300,7 +305,6 @@ def main():
             for str, R in [["X", pos.Rx], ["Y", pos.Ry], ["Z", pos.Rz]]:
                 dpg.set_value(f"Y VS X {str} Line", [[0, R[0]], [0, R[1]]])
 
-            
     dpg.destroy_context()
 
 
