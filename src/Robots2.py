@@ -992,8 +992,8 @@ def point_closest_to_point_on_line(Si, SOLi, Pi):
 def point_from_intersecting_lines(Si, SOLi, Sj, SOLj):
     """return point r"""
     check_vectors_valid([Si, SOLi, Sj, SOLj])
-    Si, SOLi = unit_vector(Si, SOLi)
-    Sj, SOLj = unit_vector(Sj, SOLj)
+    Si, SOLi = unit_line(Si, SOLi)
+    Sj, SOLj = unit_line(Sj, SOLj)
     r = vcross(SOLi, SOLj) / vdot(SOLi, Sj)
     return r
 
@@ -1004,7 +1004,7 @@ def point_from_intersecting_plane_and_line(Si, SOLi, DOj, Sj):
     return vcross(Sj, SOLi) - (DOj * Si) / vdot(Sj, Si)
 
 
-def point_from_point_plane(r, DO, S):
+def point_from_point_projected_to_plane(r, DO, S):
     check_vectors_valid([r, S])
     rp = r - (vdot(r, S) + DO) / (vdot(S, S)) * S
     return rp
@@ -1015,7 +1015,7 @@ def line_from_intersecting_planes(DOi, Si, DOj, Sj):
     check_vectors_valid([Si, Sj])
     S3 = vcross(Si, Sj)
     SOL3 = (-DOj) * Si - (-DOi) * Sj
-    S3, SOL3 = unit_vector(S3, SOL3)
+    S3, SOL3 = unit_line(S3, SOL3)
     check_line_valid(S3, SOL3)
     return S3, SOL3
 
@@ -1025,7 +1025,7 @@ def line_from_two_points(Pi, Pj):
     check_vectors_valid([Pi, Pj])
     Si = Pj - Pi
     SOLi = vcross(Pj, Si)
-    SiUnit, SOLiUnit = unit_vector(Si, SOLi)
+    SiUnit, SOLiUnit = unit_line(Si, SOLi)
     check_line_valid(SiUnit, SOLiUnit)
     return SiUnit, SOLiUnit
 

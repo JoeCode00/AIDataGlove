@@ -17,6 +17,7 @@ def plothelper(
     yaxismin,
     yaxismax,
     axis_labels=[["X", "Red"], ["Y", "Green"], ["Z", "Blue"]],
+    legend_show=True,
 ):
 
     with dpg.plot(label=plotlabel, fit_button=1):
@@ -35,8 +36,8 @@ def plothelper(
             yaxismin,
             yaxismax,
         )
-
-        dpg.add_plot_legend()
+        if legend_show:
+            dpg.add_plot_legend()
         for axis, color in axis_labels:
             dpg.add_line_series(
                 [],
@@ -45,6 +46,7 @@ def plothelper(
                 tag=yaxis + " VS " + xaxis + " " + axis + " Line",
                 parent=yaxis + " VS " + xaxis + " Y",
             )
+            print(yaxis + " VS " + xaxis + " " + axis + " Line")
             dpg.bind_item_theme(
                 yaxis + " VS " + xaxis + " " + axis + " Line", color + " Plot Line"
             )

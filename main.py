@@ -6,7 +6,7 @@ from src.threaded_queue import ComThread
 from src.handle_time import Timer
 
 # from src.dead_reckoning import Dynamics
-from src.motion import Position
+from src.motion import Position, GlyphPlane
 from src.gui import stop_gui, plothelper
 from src.gui_help import _create_dynamic_textures, _create_static_textures
 
@@ -73,7 +73,51 @@ def setup_gui():
         pos=[0, 0],
     ):
         with dpg.collapsing_header(label="Buttons", default_open=True):
-            dpg.add_button(label="ESTOP", callback=lambda: stop_gui(), width=200)
+            dpg.add_button(
+                label="ESTOP",
+                callback=lambda: stop_gui(),
+                width=dpg.get_item_width("Window") - 15,
+            )
+            dpg.add_button(
+                label="Reset World",
+                callback=lambda: pos.reset_world(),
+                width=dpg.get_item_width("Window") - 15,
+            )
+
+    with dpg.window(
+        label="Glyph",
+        tag="Glyph",
+        no_close=True,
+        width=dpg.get_viewport_width() / 2,
+        height=dpg.get_viewport_height() / 2,
+        pos=[dpg.get_viewport_width() / 2, 0],
+    ):
+        ColumnWidth = dpg.get_item_width("Glyph") / 2 * 0.95
+        RowHeight = dpg.get_item_height("Glyph") * 0.95
+        with dpg.group(horizontal=True, height=RowHeight):
+            with dpg.group(width=ColumnWidth):
+                plothelper(
+                    plotlabel="Plane Viewer",
+                    xaxis="X",
+                    xaxisunits="-",
+                    xaxismin=-5,
+                    xaxismax=5,
+                    yaxis="Y",
+                    yaxisunits="-",
+                    yaxismin=-5,
+                    yaxismax=5,
+                    axis_labels=[
+                        ["X", "Red"],
+                        ["Y", "Green"],
+                        ["Z", "Blue"],
+                        ["Pointer", "White"],
+                        ["Plane Right", "White"],
+                        ["Plane Top", "White"],
+                        ["Plane Left", "White"],
+                        ["Plane Bottom", "White"],
+                    ],
+                    legend_show=False,
+                )
 
     with dpg.window(
         label="Acceleration",
@@ -199,6 +243,7 @@ def handle_pos(data_read, timestamp):
 com = ComThread()
 time = Timer()
 pos = Position()
+plane = GlyphPlane(distance=5, size=8)
 
 
 def main():
@@ -209,36 +254,29 @@ def main():
     dpg.render_dearpygui_frame()
     dpg.show_metrics()
 
-    # old_viewport_width = None
-    # old_viewport_height = None
-
     com.start()
     data_write = (0, 0, 0, 0, 0, 0, 0, 0)
 
-    # bias_timer = Timer()
-    # bias_set = False
     timestamp = time.now()
+
+    plane_sides = [
+                ["Right", plane.world_bottom_right, plane.world_top_right],
+                ["Top", plane.world_top_left, plane.world_top_right],
+                ["Left", plane.world_bottom_left, plane.world_top_left],
+                ["Bottom", plane.world_bottom_left, plane.world_bottom_right]
+            ]
+    for side, coords_1, coords_2 in plane_sides:
+        dpg.set_value(f"Y VS X Plane {side} Line", [[coords_1[0], coords_2[0]], [coords_1[1], coords_2[1]]])
 
     while dpg.is_dearpygui_running():
         dpg.render_dearpygui_frame()
-        # new_viewport_width = dpg.get_viewport_width()
-        # new_viewport_height = dpg.get_viewport_height()
-
-        # if (
-        #     new_viewport_width != old_viewport_width
-        #     or new_viewport_height != old_viewport_height
-        # ):
-        #     recursion_levels = 8
-        #     redraw_grid(recursion_levels)
-        # old_viewport_width = new_viewport_width
-        # old_viewport_height = new_viewport_height
-
         data_read = communicate(com, data_write, struct_pattern="8d")
         if data_read is not None:
             data_write = data_read
             timestamp = time.now()
             try:
                 handle_pos(data_read, timestamp)
+                pos.low_accel_homing_check()
             except ValueError:
                 continue
 
@@ -251,13 +289,18 @@ def main():
                             pos.history.loc[:, f"{scope} Acceleration {axis}"].tolist(),
                         ],
                     )
+            for angle_axis, axis_index in [["X", 0], ["Z", 2]]:
+                for str, R in [["RX", pos.Rx], ["RY", pos.Ry], ["RZ", pos.Rz]]:
+                    dpg.set_value(
+                        f"Angle Y VS Angle {angle_axis} {str} Line",
+                        [[0, R[axis_index]], [0, R[1]]],
+                    )
 
-            for str, R in [["RX", pos.Rx], ["RY", pos.Ry], ["RZ", pos.Rz]]:
-                dpg.set_value(f"Angle Y VS Angle X {str} Line", [[0, R[0]], [0, R[1]]])
+            # dpg.set_value(f"Y vs Z X Line")
+            for str, R in [["X", pos.Rx], ["Y", pos.Ry], ["Z", pos.Rz]]:
+                dpg.set_value(f"Y VS X {str} Line", [[0, R[0]], [0, R[1]]])
 
-            for str, R in [["RX", pos.Rx], ["RY", pos.Ry], ["RZ", pos.Rz]]:
-                dpg.set_value(f"Angle Y VS Angle Z {str} Line", [[0, R[2]], [0, R[1]]])
-
+            
     dpg.destroy_context()
 
 
