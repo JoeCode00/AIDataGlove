@@ -13,6 +13,7 @@ from src.Robots2 import (
     line_from_two_points,
     plane_from_point_and_line,
     point_from_point_projected_to_plane,
+    vector_from_R,
 )
 
 
@@ -56,6 +57,8 @@ class Position:
             columns=self.accel_euler_quat_columns,
         )
 
+        self.history_durration = 5  # seconds
+
     def set(self, world_acceleration: np.ndarray = None, quat: np.ndarray = None):
         if world_acceleration is not None:
             self.world_acceleration = world_acceleration
@@ -71,19 +74,26 @@ class Position:
         self.local_T = T_from_RP(R=self.local_R, P=self.world_acceleration)
         self.T = np.matmul(self.local_T, inv_T(self.world_T))
         self.R = R_from_T(self.T)
-        self.Rx = self.R[:, 0]
-        self.Ry = self.R[:, 1]
-        self.Rz = self.R[:, 2]
+        self.Rx = vector_from_R(self.R, "X")
+        self.Ry = vector_from_R(self.R, "Y")
+        self.Rz = vector_from_R(self.R, "Z")
 
         self.local_acceleration = P_from_TP(T=self.T, P=self.world_acceleration)
+        self.set_history(timestamp)
+        self.pointer_S, self.pointer_SOL = line_from_two_points(aligned_P(), -self.Rz)
+
+    def set_history(self, timestamp):
+        self.delete_old_history(timestamp)
         self.history.loc[timestamp, self.accel_euler_quat_columns] = (
             self.world_acceleration.T[0].tolist()
             + self.quat.tolist()
             + self.local_acceleration.T[0].tolist()
         )
 
-        self.pointer_S, self.pointer_SOL = line_from_two_points(aligned_P(), -self.Rz)
-        print(self.pointer_S)
+    def delete_old_history(self, timestamp):
+        self.history = self.history[
+            self.history.index - timestamp > -self.history_durration
+        ]
 
     def low_accel_homing_check(self):
         if vector_length(self.world_acceleration) < self.accel_deadband:
@@ -127,8 +137,8 @@ class GlyphPlane:
         self.plane_D0 = 0
         self.plane_S = aligned_P()
 
-        self.display_width_half = size/2
-        self.display_height_half = size/2
+        self.display_width_half = size / 2
+        self.display_height_half = size / 2
 
         self.local_top_right = aligned_P()
         self.local_top_right[0] = self.display_width_half

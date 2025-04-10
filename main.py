@@ -1,5 +1,3 @@
-# TODO gc old history
-
 import struct
 import numpy as np
 import dearpygui.dearpygui as dpg

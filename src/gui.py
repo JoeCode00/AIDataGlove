@@ -46,7 +46,6 @@ def plothelper(
                 tag=yaxis + " VS " + xaxis + " " + axis + " Line",
                 parent=yaxis + " VS " + xaxis + " Y",
             )
-            print(yaxis + " VS " + xaxis + " " + axis + " Line")
             dpg.bind_item_theme(
                 yaxis + " VS " + xaxis + " " + axis + " Line", color + " Plot Line"
             )
