@@ -240,6 +240,41 @@ def handle_pos(data_read, timestamp):
         raise ValueError("Could not handle pos")
 
 
+def draw_plane():
+    plane_sides = [
+        ["Right", plane.world_bottom_right, plane.world_top_right],
+        ["Top", plane.world_top_left, plane.world_top_right],
+        ["Left", plane.world_bottom_left, plane.world_top_left],
+        ["Bottom", plane.world_bottom_left, plane.world_bottom_right],
+    ]
+    for side, coords_1, coords_2 in plane_sides:
+        dpg.set_value(
+            f"Y VS X Plane {side} Line",
+            [[coords_1[0], coords_2[0]], [coords_1[1], coords_2[1]]],
+        )
+
+
+def draw_axes(timestamp):
+    for scope in ["World", "Local"]:
+        for axis in ["X", "Y", "Z"]:
+            dpg.set_value(
+                f"{scope} Acceleration VS Time {axis} Line",
+                [
+                    (pos.history.index - timestamp).tolist(),
+                    pos.history.loc[:, f"{scope} Acceleration {axis}"].tolist(),
+                ],
+            )
+        for angle_axis, axis_index in [["X", 0], ["Z", 2]]:
+            for str, R in [["RX", pos.Rx], ["RY", pos.Ry], ["RZ", pos.Rz]]:
+                dpg.set_value(
+                    f"Angle Y VS Angle {angle_axis} {str} Line",
+                    [[0, R[axis_index]], [0, R[1]]],
+                )
+
+        for str, R in [["X", pos.Rx], ["Y", pos.Ry], ["Z", pos.Rz]]:
+            dpg.set_value(f"Y VS X {str} Line", [[0, R[0]], [0, R[1]]])
+
+
 com = ComThread()
 time = Timer()
 pos = Position()
@@ -254,22 +289,11 @@ def main():
     dpg.render_dearpygui_frame()
     dpg.show_metrics()
 
+    draw_plane()
+
     com.start()
     data_write = (0, 0, 0, 0, 0, 0, 0, 0)
-
     timestamp = time.now()
-
-    plane_sides = [
-        ["Right", plane.world_bottom_right, plane.world_top_right],
-        ["Top", plane.world_top_left, plane.world_top_right],
-        ["Left", plane.world_bottom_left, plane.world_top_left],
-        ["Bottom", plane.world_bottom_left, plane.world_bottom_right],
-    ]
-    for side, coords_1, coords_2 in plane_sides:
-        dpg.set_value(
-            f"Y VS X Plane {side} Line",
-            [[coords_1[0], coords_2[0]], [coords_1[1], coords_2[1]]],
-        )
 
     while dpg.is_dearpygui_running():
         dpg.render_dearpygui_frame()
@@ -282,26 +306,7 @@ def main():
                 pos.low_accel_homing_check()
             except ValueError:
                 continue
-
-            for scope in ["World", "Local"]:
-                for axis in ["X", "Y", "Z"]:
-                    dpg.set_value(
-                        f"{scope} Acceleration VS Time {axis} Line",
-                        [
-                            (pos.history.index - timestamp).tolist(),
-                            pos.history.loc[:, f"{scope} Acceleration {axis}"].tolist(),
-                        ],
-                    )
-            for angle_axis, axis_index in [["X", 0], ["Z", 2]]:
-                for str, R in [["RX", pos.Rx], ["RY", pos.Ry], ["RZ", pos.Rz]]:
-                    dpg.set_value(
-                        f"Angle Y VS Angle {angle_axis} {str} Line",
-                        [[0, R[axis_index]], [0, R[1]]],
-                    )
-
-            # dpg.set_value(f"Y vs Z X Line")
-            for str, R in [["X", pos.Rx], ["Y", pos.Ry], ["Z", pos.Rz]]:
-                dpg.set_value(f"Y VS X {str} Line", [[0, R[0]], [0, R[1]]])
+            draw_axes(timestamp)
 
     dpg.destroy_context()
 
