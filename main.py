@@ -229,8 +229,17 @@ def handle_pos(data_read, timestamp):
         quat_x,
         quat_y,
         quat_z,
+        cal_sys,
+        cal_gyro,
+        cal_accel,
+        cal_mag,
         *_,
     ) = data_read
+    print(f"{cal_sys} {cal_gyro} {cal_accel} {cal_mag}")
+    if cal_sys < 1:
+        # Positioning is relative
+        return
+    
     accel = pos.make_accel(accelerometer_x, accelerometer_y, accelerometer_z)
     quat = pos.make_quat(quat_w, quat_x, quat_y, quat_z)
     try:
@@ -300,18 +309,18 @@ def main():
     draw_plane()
 
     com.start()
-    data_write = (0, 0, 0, 0, 0, 0, 0, 0)
+    data_write = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     timestamp = time.now()
 
     data_read = None
     while data_read is None:
-        data_read = communicate(com, data_write, struct_pattern="8d")
+        data_read = communicate(com, data_write, struct_pattern="16d")
     handle_pos(data_read, timestamp)
     pos.reset_world()
 
     while dpg.is_dearpygui_running():
         dpg.render_dearpygui_frame()
-        data_read = communicate(com, data_write, struct_pattern="8d")
+        data_read = communicate(com, data_write, struct_pattern="16d")
         if data_read is not None:
             data_write = data_read
             timestamp = time.now()

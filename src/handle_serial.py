@@ -72,7 +72,7 @@ class TeensySerial:
         try:
             self.ser.write(data)
         except Exception as e:
-            raise TeensySerialError(f"Connection timed out due to {repr(e)}") from e
+            raise ConnectionError(f"Connection timed out due to {repr(e)}") from e
 
     def read(self, size: int = None, expected: str = ""):
         """Reads until an expected character is seen. If there is no expected character or the
@@ -96,7 +96,7 @@ class TeensySerial:
             try:
                 bytes_read = self.ser.read_until(expected=expected, size=size)
             except Exception as e:
-                raise TeensySerialError(
+                raise ConnectionError(
                     f"Reading until {expected} failed due to {repr(e)}"
                 ) from e
 

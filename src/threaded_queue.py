@@ -20,14 +20,25 @@ class ComThread(Thread):
 
     def queue_writer(self):
         try:
-
             data = self.write.get(block=False, timeout=0.05)
-            self.teensy.write(data)
+            try:
+                self.teensy.write(data)
+            except ConnectionError:
+                print("Recovering from com loss in 10 seconds")
+                sleep(10)
+                self.teensy = TeensySerial(port="COM17", baudrate=115200)
+                self.teensy.write(data)
         except Empty:
             pass
 
     def queue_reader(self):
-        bytes_read = self.teensy.read()
+        try:
+            bytes_read = self.teensy.read()
+        except ConnectionError:
+            print("Recovering from com loss in 10 seconds")
+            sleep(10)
+            self.teensy = TeensySerial(port="COM17", baudrate=115200)
+            bytes_read = self.teensy.read()
         self.read.put(bytes_read)
 
     def writer(self, data):
