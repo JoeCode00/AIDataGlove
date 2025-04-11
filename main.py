@@ -104,8 +104,8 @@ def setup_gui():
                     xaxismax=5,
                     yaxis="Y",
                     yaxisunits="-",
-                    yaxismin=-5,
-                    yaxismax=5,
+                    yaxismin=5,
+                    yaxismax=-5,
                     axis_labels=[
                         ["X", "Red"],
                         ["Y", "Green"],
@@ -274,6 +274,14 @@ def draw_axes(timestamp):
         for str, R in [["X", pos.Rx], ["Y", pos.Ry], ["Z", pos.Rz]]:
             dpg.set_value(f"Y VS X {str} Line", [[0, R[0]], [0, R[1]]])
 
+        if True:
+            traced_point = plane.trace_point(pos.pointer_S, pos.pointer_SOL)
+            dpg.set_value(
+                "Y VS X Pointer Line", [[0, traced_point[0]], [0, -traced_point[1]]]
+            )
+        else:
+            dpg.set_value("Y VS X Pointer Line", [[0, 0], [0, 0]])
+
 
 com = ComThread()
 time = Timer()
@@ -295,6 +303,12 @@ def main():
     data_write = (0, 0, 0, 0, 0, 0, 0, 0)
     timestamp = time.now()
 
+    data_read = None
+    while data_read is None:
+        data_read = communicate(com, data_write, struct_pattern="8d")
+    handle_pos(data_read, timestamp)
+    pos.reset_world()
+
     while dpg.is_dearpygui_running():
         dpg.render_dearpygui_frame()
         data_read = communicate(com, data_write, struct_pattern="8d")
@@ -303,9 +317,10 @@ def main():
             timestamp = time.now()
             try:
                 handle_pos(data_read, timestamp)
-                pos.low_accel_homing_check()
+                # pos.low_accel_homing_check()
             except ValueError:
                 continue
+
             draw_axes(timestamp)
 
     dpg.destroy_context()

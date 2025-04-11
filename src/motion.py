@@ -14,6 +14,8 @@ from src.Robots2 import (
     plane_from_point_and_line,
     point_from_point_projected_to_plane,
     vector_from_R,
+    point_from_intersecting_plane_and_line,
+    R_from_axis_rotation,
 )
 
 
@@ -32,6 +34,10 @@ class Position:
         self.T = aligned_T()
         self.local_T = aligned_T()
         self.world_T = aligned_T()
+
+        self.chip_rotation = R_from_axis_rotation("X", np.deg2rad(0))
+        self.chip_transform = T_from_RP(self.chip_rotation, aligned_P())
+
         self.local_acceleration = aligned_P()
 
         self.pointer_S = aligned_P()
@@ -71,7 +77,7 @@ class Position:
         self.rot = Rotation.from_quat(self.quat)
         self.local_R = self.rot.as_matrix()
 
-        self.local_T = T_from_RP(R=self.local_R, P=self.world_acceleration)
+        self.local_T = np.matmul(T_from_RP(R=self.local_R, P=self.world_acceleration), self.chip_transform)
         self.T = np.matmul(self.local_T, inv_T(self.world_T))
         self.R = R_from_T(self.T)
         self.Rx = vector_from_R(self.R, "X")
@@ -80,7 +86,7 @@ class Position:
 
         self.local_acceleration = P_from_TP(T=self.T, P=self.world_acceleration)
         self.set_history(timestamp)
-        self.pointer_S, self.pointer_SOL = line_from_two_points(aligned_P(), -self.Rz)
+        self.pointer_S, self.pointer_SOL = line_from_two_points(aligned_P(), self.Rz)
 
     def set_history(self, timestamp):
         self.delete_old_history(timestamp)
@@ -120,17 +126,17 @@ class GlyphPlane:
         self.point_on_plane_1 = aligned_P()
         self.point_on_plane_1[0] = 0
         self.point_on_plane_1[1] = 0
-        self.point_on_plane_1[2] = -distance
+        self.point_on_plane_1[2] = distance
 
         self.point_on_plane_2 = aligned_P()
         self.point_on_plane_2[0] = 0
         self.point_on_plane_2[1] = 1
-        self.point_on_plane_2[2] = -distance
+        self.point_on_plane_2[2] = distance
 
         self.point_on_plane_3 = aligned_P()
         self.point_on_plane_3[0] = 1
         self.point_on_plane_3[1] = 1
-        self.point_on_plane_3[2] = -distance
+        self.point_on_plane_3[2] = distance
 
         self.line_on_plane_S = aligned_P()
         self.line_on_plane_SOL = aligned_P()
@@ -161,6 +167,8 @@ class GlyphPlane:
         self.world_bottom_left = aligned_P()
         self.world_bottom_right = aligned_P()
 
+        self.traced_point = aligned_P()
+
         self.update()
 
     def update(self):
@@ -185,3 +193,9 @@ class GlyphPlane:
 
     def plane(self):
         return self.plane_D0, self.plane_S
+
+    def trace_point(self, pointer_S, pointer_SOL):
+        self.traced_point = point_from_intersecting_plane_and_line(
+            pointer_S, pointer_SOL, self.plane_D0, self.plane_S
+        )
+        return self.traced_point
