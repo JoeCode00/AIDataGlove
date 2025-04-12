@@ -7,7 +7,7 @@ from src.handle_time import Timer
 
 # from src.dead_reckoning import Dynamics
 from src.motion import Position, GlyphPlane
-from src.gui import stop_gui, plothelper
+from src.gui import stop_gui, plothelper, CalibrationThemes
 from src.gui_help import _create_dynamic_textures, _create_static_textures
 
 np.set_printoptions(suppress=True)
@@ -83,6 +83,41 @@ def setup_gui():
                 callback=lambda: pos.reset_world(),
                 width=dpg.get_item_width("Window") - 15,
             )
+        ColumnWidth = dpg.get_item_width("Window") / 2 * 0.95
+        RowHeight = dpg.get_item_height("Window") / 3 * 0.95
+        with dpg.group(horizontal=True):
+            with dpg.child_window(
+                tag="Calibration", height=RowHeight, width=ColumnWidth
+            ):
+                dpg.add_text("Calibration")
+                dpg.add_text("", tag="Calibration Help")
+                dpg.add_input_text(
+                    default_value="System",
+                    tag="Calibration System",
+                    readonly=True,
+                    width=dpg.get_item_width("Calibration"),
+                )
+                dpg.add_input_text(
+                    default_value="Mag",
+                    tag="Calibration Mag",
+                    readonly=True,
+                    width=dpg.get_item_width("Calibration"),
+                )
+                dpg.add_input_text(
+                    default_value="Accel",
+                    tag="Calibration Accel",
+                    readonly=True,
+                    width=dpg.get_item_width("Calibration"),
+                )
+                dpg.add_input_text(
+                    default_value="Gyro",
+                    tag="Calibration Gyro",
+                    readonly=True,
+                    width=dpg.get_item_width("Calibration"),
+                )
+
+            with dpg.child_window(tag="TBD", height=RowHeight, width=ColumnWidth):
+                pass
 
     with dpg.window(
         label="Glyph",
@@ -220,27 +255,44 @@ def communicate(
     return data_read
 
 
-def handle_pos(data_read, timestamp):
-    (
-        accelerometer_x,
-        accelerometer_y,
-        accelerometer_z,
-        quat_w,
-        quat_x,
-        quat_y,
-        quat_z,
-        cal_sys,
-        cal_gyro,
-        cal_accel,
-        cal_mag,
-        *_,
-    ) = data_read
-    print(f"{cal_sys} {cal_gyro} {cal_accel} {cal_mag}")
-    if cal_sys < 1:
-        # Positioning is relative
-        return
-    
+def handle_calibration(frame, cal_themes):
+    cal_sys, cal_gyro, cal_accel, cal_mag = frame["Calibration"]
+    dpg.bind_item_theme(
+        dpg.get_alias_id("Calibration System"),
+        cal_themes[cal_sys],
+    )
+    dpg.bind_item_theme(
+        dpg.get_alias_id("Calibration Mag"),
+        cal_themes[cal_mag],
+    )
+    dpg.bind_item_theme(
+        dpg.get_alias_id("Calibration Accel"),
+        cal_themes[cal_accel],
+    )
+    dpg.bind_item_theme(
+        dpg.get_alias_id("Calibration Gyro"),
+        cal_themes[cal_gyro],
+    )
+    if cal_mag != 3:
+        dpg.set_value("Calibration Help", "Mag: Move in figure-8")
+        return False
+    if cal_accel != 3:
+        dpg.set_value("Calibration Help", "Accel: Place on orthogonal sides")
+        return False
+    if cal_gyro != 3:
+        dpg.set_value("Calibration Help", "Gyro: Stop moving the sensor")
+        return False
+    if cal_sys < 2:
+        dpg.set_value("Calibration Help", "System: Move the sensor around")
+        return False
+    dpg.set_value("Calibration Help", "")
+    return True
+
+
+def handle_pos(frame, timestamp):
+    accelerometer_x, accelerometer_y, accelerometer_z = frame["Accelerometer"]
     accel = pos.make_accel(accelerometer_x, accelerometer_y, accelerometer_z)
+    quat_w, quat_x, quat_y, quat_z = frame["Quaternion"]
     quat = pos.make_quat(quat_w, quat_x, quat_y, quat_z)
     try:
         pos.set(world_acceleration=accel, quat=quat)
@@ -301,10 +353,11 @@ plane = GlyphPlane(distance=5, size=8)
 def main():
     dpg.create_context()
     setup_gui()
+    cal_themes = CalibrationThemes().themes()
     dpg.setup_dearpygui()
     dpg.show_viewport()
     dpg.render_dearpygui_frame()
-    dpg.show_metrics()
+    # dpg.show_metrics()
 
     draw_plane()
 
@@ -312,11 +365,11 @@ def main():
     data_write = (0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     timestamp = time.now()
 
-    data_read = None
-    while data_read is None:
-        data_read = communicate(com, data_write, struct_pattern="16d")
-    handle_pos(data_read, timestamp)
-    pos.reset_world()
+    # data_read = None
+    # while data_read is None:
+    #     data_read = communicate(com, data_write, struct_pattern="16d")
+    # handle_pos(data_read, timestamp)
+    # pos.reset_world()
 
     while dpg.is_dearpygui_running():
         dpg.render_dearpygui_frame()
@@ -325,8 +378,39 @@ def main():
             data_write = data_read
             timestamp = time.now()
             try:
-                handle_pos(data_read, timestamp)
-                # pos.low_accel_homing_check()
+                (
+                    accelerometer_x,
+                    accelerometer_y,
+                    accelerometer_z,
+                    quat_w,
+                    quat_x,
+                    quat_y,
+                    quat_z,
+                    cal_sys,
+                    cal_gyro,
+                    cal_accel,
+                    cal_mag,
+                    *_,
+                ) = data_read
+
+                frame = {
+                    "Accelerometer": [
+                        accelerometer_x,
+                        accelerometer_y,
+                        accelerometer_z,
+                    ],
+                    "Quaternion": [quat_w, quat_x, quat_y, quat_z],
+                    "Calibration": [
+                        int(cal_sys),
+                        int(cal_gyro),
+                        int(cal_accel),
+                        int(cal_mag),
+                    ],
+                }
+
+                if handle_calibration(frame, cal_themes):
+                    handle_pos(frame, timestamp)
+                    # pos.low_accel_homing_check()
             except ValueError:
                 continue
 

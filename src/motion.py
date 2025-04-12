@@ -74,19 +74,23 @@ class Position:
             raise ValueError("Invalid Quat")
 
     def get(self, timestamp: float):
-        self.rot = Rotation.from_quat(self.quat)
-        self.local_R = self.rot.as_matrix()
+        try:
+            self.rot = Rotation.from_quat(self.quat)
+            self.local_R = self.rot.as_matrix()
 
-        self.local_T = np.matmul(T_from_RP(R=self.local_R, P=self.world_acceleration), self.chip_transform)
-        self.T = np.matmul(self.local_T, inv_T(self.world_T))
-        self.R = R_from_T(self.T)
-        self.Rx = vector_from_R(self.R, "X")
-        self.Ry = vector_from_R(self.R, "Y")
-        self.Rz = vector_from_R(self.R, "Z")
+            self.local_T = np.matmul(T_from_RP(R=self.local_R, P=self.world_acceleration), self.chip_transform)
+            self.T = np.matmul(self.local_T, inv_T(self.world_T))
+            self.R = R_from_T(self.T)
+            self.Rx = vector_from_R(self.R, "X")
+            self.Ry = vector_from_R(self.R, "Y")
+            self.Rz = vector_from_R(self.R, "Z")
 
-        self.local_acceleration = P_from_TP(T=self.T, P=self.world_acceleration)
+            self.local_acceleration = P_from_TP(T=self.T, P=self.world_acceleration)
+        except ValueError:
+            pass
         self.set_history(timestamp)
         self.pointer_S, self.pointer_SOL = line_from_two_points(aligned_P(), self.Rz)
+        
 
     def set_history(self, timestamp):
         self.delete_old_history(timestamp)

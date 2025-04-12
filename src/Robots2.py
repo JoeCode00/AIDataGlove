@@ -22,7 +22,7 @@ def check_R_valid(R):  # checks rotation shape and if it has valid vectors
 
 def check_vector_dtype(Vector):  # Can't opperate on non-number vectors
     if Vector.dtype.kind != "i" and Vector.dtype.kind != "f":
-        raise Exception(
+        raise ValueError(
             "Vector must have dtype of integer or float, not {}".format(Vector.dtype)
         )
         return False
@@ -31,7 +31,7 @@ def check_vector_dtype(Vector):  # Can't opperate on non-number vectors
 
 def check_vector_shape(Vector):  # All vectors are assumed non-homogenous
     if np.shape(Vector) != (3, 1):
-        raise Exception(
+        raise ValueError(
             "Vector must have np.shape (3,1), not {}".format(np.shape(Vector))
         )
         return False
@@ -48,7 +48,7 @@ def vector_length(Vector):  # Same as vector magnitude, sqrt of sum of squares
 
 def check_T_dtype(T):  # Can't opperate on non-number matrix
     if T.dtype.kind != "i" and T.dtype.kind != "f":
-        raise Exception(
+        raise ValueError(
             "T matrix must have dtype of integer or float, not {}".format(T.dtype)
         )
         return False
@@ -57,14 +57,14 @@ def check_T_dtype(T):  # Can't opperate on non-number matrix
 
 def check_T_shape(T):  # Transformation matrix must be a 4x4
     if np.shape(T) != (4, 4):
-        raise Exception("T matrix must have np.shape (4,4), not {}".format(np.shape(T)))
+        raise ValueError("T matrix must have np.shape (4,4), not {}".format(np.shape(T)))
         return False
     return True
 
 
 def check_R_dtype(R):  # Can't opperate on non-number matrix
     if R.dtype.kind != "i" and R.dtype.kind != "f":
-        raise Exception(
+        raise ValueError(
             "R matrix must have dtype of integer or float, not {}".format(R.dtype)
         )
         return False
@@ -73,14 +73,14 @@ def check_R_dtype(R):  # Can't opperate on non-number matrix
 
 def check_R_shape(R):  # Rotation matrix must be a 3x3
     if np.shape(R) != (3, 3):
-        raise Exception("R matrix must have np.shape (3,3), not {}".format(np.shape(R)))
+        raise ValueError("R matrix must have np.shape (3,3), not {}".format(np.shape(R)))
         return False
     return True
 
 
 def check_S_SOL_perp(S, SOL):
     if vdot(S, SOL).round(3) != 0:
-        raise Exception("S", S, ", SOL", SOL, " not perpendicular")
+        raise ValueError("S", S, ", SOL", SOL, " not perpendicular")
         return False
     return True
 
@@ -103,7 +103,7 @@ def check_unit_vector(Vector):  # 3 decimal precision
     if round(vector_length(Vector), 3) == 1:
         return True
     else:
-        raise Exception(
+        raise ValueError(
             "vector is not unit vector, length {}".format(vector_length(Vector))
         )
 
@@ -125,7 +125,7 @@ def check_R_unit(R):  # Rotation matrix must have 3 orthogonal unit vectors
     for i in range(3):
         Vector = R[:, i].reshape((3, 1))
         if not check_unit_vector(Vector):
-            raise Exception("col {} ({}) of R is not unit vector".format(i, Axis[i]))
+            raise ValueError("col {} ({}) of R is not unit vector".format(i, Axis[i]))
             return False
     for i in range(3):
         Vector1Row = (i + 1) % 3
@@ -133,7 +133,7 @@ def check_R_unit(R):  # Rotation matrix must have 3 orthogonal unit vectors
         Vector1 = R[Vector1Row, :]
         Vector2 = R[Vector2Row, :]
         if round(np.dot(Vector1, Vector2), 2) != 0:
-            raise Exception(
+            raise ValueError(
                 "row {} ({})  and row {} ({}) of R are not perp.".format(
                     Vector1Row, Axis[Vector1Row], Vector2Row, Axis[Vector2Row]
                 )
@@ -148,13 +148,13 @@ def check_T_unit(T):  # Checks R unit and bottom row valid
         if np.array_equal(T[3, :], np.array([0, 0, 0, 1])):
             return True
         else:
-            raise Exception(
+            raise ValueError(
                 "T bottom row is not [0,0,0,1], instead it is {}".format(
                     T[3, :].tolist()
                 )
             )
     else:
-        raise Exception("R in T was not unit vector")
+        raise ValueError("R in T was not unit vector")
         return False
 
 
@@ -309,7 +309,7 @@ def origin_rotation_from_R(R, sign="+"):  # 2.8.2, returns unit vector and angle
     elif sign == "-":
         RotRad = -np.arccos(RotRadCos)  # -180<=Rotrad<=0
     else:
-        raise Exception("Invalid sign ({} or {}): {}".format(chr(43), chr(8722), sign))
+        raise ValueError("Invalid sign ({} or {}): {}".format(chr(43), chr(8722), sign))
     ZVector = np.array([[0.0], [0.0], [0.0]])
     from math import isclose
 
@@ -505,7 +505,7 @@ def solve_trig(A, B, D):  # Returns radian angles theta that solve
 #             try:
 #                 ValueStr = str(Value)
 #             except:
-#                 raise Exception('Cannot convert {} at ({},{}) to string'
+#                 raise ValueError('Cannot convert {} at ({},{}) to string'
 #                                 .format(Value, i ,j))
 #             if j != 0:
 #                 TexOutput = TexOutput + TexNewCol
@@ -536,7 +536,7 @@ def ExpandXYZ(Text, Links):
         elif (int(Numbers[i]) % Links) > int(Numbers[i + 1]):
             DirectionCount = DirectionCount - 1
         else:
-            raise Exception("Concecutive Numbers")
+            raise ValueError("Concecutive Numbers")
 
     if DirectionCount >= 0:
         Direction = "+"
@@ -944,7 +944,7 @@ def check_line_valid(S, SOL):
     if DotProduct == 0:
         return True
     else:
-        raise Exception("Line is not perpendicular, S dot SOL =", DotProduct)
+        raise ValueError("Line is not perpendicular, S dot SOL =", DotProduct)
 
 
 def unit_plane(DO, S):
@@ -1001,6 +1001,8 @@ def point_from_intersecting_lines(Si, SOLi, Sj, SOLj):
 def point_from_intersecting_plane_and_line(Si, SOLi, DOj, Sj):
     """return point r"""
     check_vectors_valid([Si, SOLi, Sj])
+    if vdot(Sj, Si):
+        raise ValueError("Div by zero in vdot(Sj, Si)")
     return vcross(Sj, SOLi) - (DOj * Si) / vdot(Sj, Si)
 
 
@@ -1161,7 +1163,7 @@ def pitch_from_force_moment(f, m):
         h = m / f
         return h
     else:
-        raise Exception("F cannot equal 0")
+        raise ValueError("F cannot equal 0")
         return None
 
 
